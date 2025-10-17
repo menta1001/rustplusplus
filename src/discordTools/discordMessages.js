@@ -67,7 +67,7 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, server.messageId,
             instance.channelId.servers, interaction);
 
-        if (!interaction) {
+        if (!interaction && message && message.id) {
             instance.serverList[serverId].messageId = message.id;
             Client.client.setInstance(guildId, instance);
         }
@@ -85,7 +85,7 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, tracker.messageId,
             instance.channelId.trackers, interaction);
 
-        if (!interaction) {
+        if (!interaction && message && message.id) {
             instance.trackers[trackerId].messageId = message.id;
             Client.client.setInstance(guildId, instance);
         }
@@ -111,7 +111,7 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, entity.messageId,
             instance.channelId.switches, interaction);
 
-        if (!interaction) {
+        if (!interaction && message && message.id) {
             instance.serverList[serverId].switches[entityId].messageId = message.id;
             Client.client.setInstance(guildId, instance);
         }
@@ -133,7 +133,7 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, entity.messageId,
             instance.channelId.alarms, interaction);
 
-        if (!interaction) {
+        if (!interaction && message && message.id) {
             instance.serverList[serverId].alarms[entityId].messageId = message.id;
             Client.client.setInstance(guildId, instance);
         }
@@ -160,7 +160,7 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, entity.messageId,
             instance.channelId.storageMonitors, interaction);
 
-        if (!interaction) {
+        if (!interaction && message && message.id) {
             instance.serverList[serverId].storageMonitors[entityId].messageId = message.id;
             Client.client.setInstance(guildId, instance);
         }
@@ -180,7 +180,7 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, group.messageId,
             instance.channelId.switchGroups, interaction);
 
-        if (!interaction) {
+        if (!interaction && message && message.id) {
             instance.serverList[serverId].switchGroups[groupId].messageId = message.id;
             Client.client.setInstance(guildId, instance);
         }
