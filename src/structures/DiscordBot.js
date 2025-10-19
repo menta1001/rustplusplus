@@ -20,6 +20,7 @@
 
 const FormatJS = require('@formatjs/intl');
 const Discord = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const Fs = require('fs');
 const Path = require('path');
 
@@ -35,6 +36,21 @@ const Logger = require('./Logger.js');
 const PermissionHandler = require('../handlers/permissionHandler.js');
 const RustLabs = require('../structures/RustLabs');
 const RustPlus = require('../structures/RustPlus');
+
+function normalizeInteractionContent(content) {
+    if (content && typeof content === 'object' && !Array.isArray(content)) {
+        const normalizedContent = { ...content };
+        const isEphemeral = !!normalizedContent.ephemeral;
+
+        if (Object.prototype.hasOwnProperty.call(normalizedContent, 'ephemeral')) {
+            delete normalizedContent.ephemeral;
+        }
+
+        return { content: normalizedContent, isEphemeral };
+    }
+
+    return { content, isEphemeral: false };
+}
 
 class DiscordBot extends Discord.Client {
     constructor(props) {
@@ -602,7 +618,14 @@ class DiscordBot extends Discord.Client {
 
     async interactionReply(interaction, content) {
         try {
-            return await interaction.reply(content);
+            const { content: replyOptions, isEphemeral } = normalizeInteractionContent(content);
+
+            if (isEphemeral && replyOptions && typeof replyOptions === 'object' &&
+                !Object.prototype.hasOwnProperty.call(replyOptions, 'flags')) {
+                replyOptions.flags = MessageFlags.Ephemeral;
+            }
+
+            return await interaction.reply(replyOptions);
         }
         catch (e) {
             this.log(this.intlGet(null, 'errorCap'),
@@ -614,7 +637,8 @@ class DiscordBot extends Discord.Client {
 
     async interactionEditReply(interaction, content) {
         try {
-            return await interaction.editReply(content);
+            const { content: replyOptions } = normalizeInteractionContent(content);
+            return await interaction.editReply(replyOptions);
         }
         catch (e) {
             this.log(this.intlGet(null, 'errorCap'),
@@ -627,10 +651,18 @@ class DiscordBot extends Discord.Client {
     async interactionUpdate(interaction, content) {
         try {
             if (interaction.deferred || interaction.replied) {
-                return await interaction.editReply(content);
+                const { content: replyOptions } = normalizeInteractionContent(content);
+                return await interaction.editReply(replyOptions);
             }
 
-            return await interaction.update(content);
+            const { content: replyOptions, isEphemeral } = normalizeInteractionContent(content);
+
+            if (isEphemeral && replyOptions && typeof replyOptions === 'object' &&
+                !Object.prototype.hasOwnProperty.call(replyOptions, 'flags')) {
+                replyOptions.flags = MessageFlags.Ephemeral;
+            }
+
+            return await interaction.update(replyOptions);
         }
         catch (e) {
             this.log(this.intlGet(null, 'errorCap'),
