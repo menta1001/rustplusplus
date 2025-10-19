@@ -514,5 +514,7 @@ module.exports = async (client, interaction) => {
         id: `${verifyId}`
     }));
 
-    interaction.deferUpdate();
+    if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferUpdate();
+    }
 }
