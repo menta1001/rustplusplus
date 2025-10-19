@@ -181,6 +181,8 @@ module.exports = {
     },
 
     getSmartSwitchGroupButtons: function (guildId, serverId, groupId) {
+        const instance = Client.client.getInstance(guildId);
+        const group = instance.serverList[serverId].switchGroups[groupId];
         const identifier = JSON.stringify({ "serverId": serverId, "groupId": groupId });
 
         return [
@@ -215,6 +217,11 @@ module.exports = {
                     customId: `GroupRemoveSwitch${identifier}`,
                     label: Client.client.intlGet(guildId, 'removeSwitchCap'),
                     style: DANGER
+                }),
+                module.exports.getButton({
+                    customId: `GroupSync${identifier}`,
+                    label: Client.client.intlGet(guildId, 'syncCap'),
+                    style: group.syncEnabled ? SUCCESS : SECONDARY
                 }))
         ];
     },

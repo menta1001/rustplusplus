@@ -460,6 +460,12 @@ module.exports = {
         const instance = Client.client.getInstance(guildId);
         const group = instance.serverList[serverId].switchGroups[groupId];
 
+        if (!group.hasOwnProperty('syncEnabled')) group.syncEnabled = false;
+        if (!group.hasOwnProperty('syncDelay')) group.syncDelay = 60;
+        if (!group.hasOwnProperty('syncState') || typeof group.syncState !== 'object' || group.syncState === null) {
+            group.syncState = {};
+        }
+
         let switchName = '', switchId = '', switchActive = '';
         for (const groupSwitchId of group.switches) {
             if (instance.serverList[serverId].switches.hasOwnProperty(groupSwitchId)) {
@@ -485,6 +491,13 @@ module.exports = {
         if (switchId === '') switchId = Client.client.intlGet(guildId, 'none');
         if (switchActive === '') switchActive = Client.client.intlGet(guildId, 'none');
 
+        const syncStatus = group.syncEnabled ?
+            Client.client.intlGet(guildId, 'enabledCap') :
+            Client.client.intlGet(guildId, 'disabledCap');
+        const syncDelay = group.syncEnabled && group.syncDelay > 0 ?
+            Timer.secondsToFullScale(group.syncDelay) :
+            Client.client.intlGet(guildId, 'none');
+
         return module.exports.getEmbed({
             title: group.name,
             color: Constants.COLOR_DEFAULT,
@@ -499,7 +512,9 @@ module.exports = {
                 },
                 { name: Client.client.intlGet(guildId, 'switches'), value: switchName, inline: true },
                 { name: 'ID', value: switchId, inline: true },
-                { name: Client.client.intlGet(guildId, 'status'), value: switchActive, inline: true }
+                { name: Client.client.intlGet(guildId, 'status'), value: switchActive, inline: true },
+                { name: Client.client.intlGet(guildId, 'syncCap'), value: syncStatus, inline: true },
+                { name: Client.client.intlGet(guildId, 'syncDelay'), value: syncDelay, inline: true }
             ],
 
             timestamp: true

@@ -502,6 +502,11 @@ module.exports = async (client, interaction) => {
                     if (groupContent.switches.includes(`${entityId}`) && !groupsToUpdate.includes(groupId)) {
                         groupsToUpdate.push(groupId);
                     }
+                    if (groupContent.syncState) {
+                        delete groupContent.syncState[`${entityId}`];
+                    }
+                    const rustplusInstance = client.rustplusInstances[guildId];
+                    SmartSwitchGroupHandler.clearGroupSyncTimeouts(rustplusInstance, groupId, `${entityId}`);
                 }
             }
         }
@@ -586,7 +591,10 @@ module.exports = async (client, interaction) => {
             command: `${groupId}`,
             switches: [],
             image: 'smart_switch.png',
-            messageId: null
+            messageId: null,
+            syncEnabled: false,
+            syncDelay: 60,
+            syncState: {}
         }
         client.setInstance(guildId, instance);
 
@@ -966,11 +974,13 @@ module.exports = async (client, interaction) => {
         interaction.deferUpdate();
 
         if (rustplus) {
-            clearTimeout(rustplus.currentSwitchTimeouts[ids.group]);
-            delete rustplus.currentSwitchTimeouts[ids.group];
+            clearTimeout(rustplus.currentSwitchTimeouts[ids.groupId]);
+            delete rustplus.currentSwitchTimeouts[ids.groupId];
 
             if (rustplus.serverId === ids.serverId) {
                 const active = (interaction.customId.startsWith('GroupTurnOn') ? true : false);
+
+                SmartSwitchGroupHandler.ensureGroupSyncDefaults(instance, ids.serverId, ids.groupId);
 
                 if (instance.generalSettings.smartSwitchNotifyInGameWhenChangedFromDiscord) {
                     const user = interaction.user.username;
@@ -994,6 +1004,44 @@ module.exports = async (client, interaction) => {
                     client, rustplus, guildId, ids.serverId, ids.groupId, active);
             }
         }
+    }
+    else if (interaction.customId.startsWith('GroupSync')) {
+        const ids = JSON.parse(interaction.customId.replace('GroupSync', ''));
+        const server = instance.serverList[ids.serverId];
+
+        if (!server || (server && !server.switchGroups.hasOwnProperty(ids.groupId))) {
+            await interaction.message.delete();
+            return;
+        }
+
+        interaction.deferUpdate();
+
+        const group = SmartSwitchGroupHandler.ensureGroupSyncDefaults(instance, ids.serverId, ids.groupId);
+        const rustplusInstance = client.rustplusInstances[guildId];
+
+        group.syncEnabled = !group.syncEnabled;
+
+        if (group.syncEnabled) {
+            group.syncState = {};
+            for (const switchId of group.switches) {
+                if (server.switches.hasOwnProperty(switchId)) {
+                    group.syncState[switchId] = server.switches[switchId].active;
+                }
+            }
+        }
+        else {
+            group.syncState = {};
+            SmartSwitchGroupHandler.clearGroupSyncTimeouts(rustplusInstance, ids.groupId);
+        }
+
+        client.setInstance(guildId, instance);
+
+        client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'buttonValueChange', {
+            id: `${verifyId}`,
+            value: `${group.syncEnabled}`
+        }));
+
+        await DiscordMessages.sendSmartSwitchGroupMessage(guildId, ids.serverId, ids.groupId);
     }
     else if (interaction.customId.startsWith('GroupEdit')) {
         const ids = JSON.parse(interaction.customId.replace('GroupEdit', ''));
@@ -1024,6 +1072,7 @@ module.exports = async (client, interaction) => {
         if (rustplus) {
             clearTimeout(rustplus.currentSwitchTimeouts[ids.groupId]);
             delete rustplus.currentSwitchTimeouts[ids.groupId];
+            SmartSwitchGroupHandler.clearGroupSyncTimeouts(rustplus, ids.groupId);
         }
 
         if (server.switchGroups.hasOwnProperty(ids.groupId)) {
