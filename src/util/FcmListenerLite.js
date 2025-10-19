@@ -163,6 +163,18 @@ async function pairingServer(client, guild, steamId, title, message, body) {
     const instance = client.getInstance(guild.id);
     const serverId = `${body.ip}-${body.port}`;
 
+    let previousServerId = null;
+    for (const [id, players] of Object.entries(instance.serverListLite)) {
+        if (id === serverId) continue;
+        if (!players.hasOwnProperty(steamId)) continue;
+
+        const details = players[steamId];
+        if (details.serverIp === body.ip) {
+            previousServerId = id;
+            break;
+        }
+    }
+
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
 
     instance.serverListLite[serverId][steamId] = {
@@ -171,6 +183,15 @@ async function pairingServer(client, guild, steamId, title, message, body) {
         steamId: body.playerId,
         playerToken: body.playerToken,
     };
+
+    if (previousServerId && previousServerId !== serverId &&
+        instance.serverListLite.hasOwnProperty(previousServerId)) {
+        delete instance.serverListLite[previousServerId][steamId];
+
+        if (Object.keys(instance.serverListLite[previousServerId]).length === 0) {
+            delete instance.serverListLite[previousServerId];
+        }
+    }
     client.setInstance(guild.id, instance);
 
     const rustplus = client.rustplusInstances[guild.id];
