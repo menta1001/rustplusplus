@@ -23,6 +23,8 @@ const Discord = require('discord.js');
 const Battlemetrics = require('../structures/Battlemetrics');
 const Constants = require('../util/constants.js');
 const DiscordMessages = require('../discordTools/discordMessages.js');
+const DiscordSelectMenus = require('../discordTools/discordSelectMenus.js');
+const DiscordTools = require('../discordTools/discordTools.js');
 const Keywords = require('../util/keywords.js');
 const Scrape = require('../util/scrape.js');
 const Timer = require('../util/timer');
@@ -71,6 +73,39 @@ module.exports = async (client, interaction) => {
             id: `${verifyId}`,
             value: `${server.cargoShipEgressTimeMs}, ${server.oilRigLockedCrateUnlockTimeMs}, ${server.bradleyRespawnTimeMs}`
         }));
+    }
+    else if (interaction.customId.startsWith('TrademarkCustom')) {
+        const ids = JSON.parse(interaction.customId.replace('TrademarkCustom', ''));
+        let trademark = interaction.fields.getTextInputValue('TrademarkCustomValue');
+        trademark = trademark.trim().replace(/\s+/g, ' ');
+
+        instance.generalSettings.trademark = trademark;
+        client.setInstance(guildId, instance);
+
+        const rustplus = client.rustplusInstances[guildId];
+        if (rustplus) {
+            rustplus.generalSettings.trademark = trademark;
+            rustplus.trademarkString = (trademark === 'NOT SHOWING') ? '' : `${trademark} | `;
+        }
+
+        client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'modalValueChange', {
+            id: `${verifyId}`,
+            value: `${trademark}`
+        }));
+
+        if (ids.messageId && ids.channelId) {
+            const message = await DiscordTools.getMessageById(guildId, ids.channelId, ids.messageId);
+            if (message) {
+                await client.messageEdit(message, {
+                    components: [DiscordSelectMenus.getTrademarkSelectMenu(guildId, trademark)]
+                });
+            }
+        }
+
+        await client.interactionReply(interaction, {
+            content: client.intlGet(guildId, 'customTrademarkUpdated', { trademark: trademark }),
+            ephemeral: true
+        });
     }
     else if (interaction.customId.startsWith('ServerEdit')) {
         const ids = JSON.parse(interaction.customId.replace('ServerEdit', ''));
