@@ -25,6 +25,8 @@ There are a few auto settings for Smart Switches:
 - **AUTO-OFF-PROXIMITY** - Smart Switch will automatically go inactive if teammate is in proximity, if outside proximity it will go active.
 - **AUTO-ON-ANY-ONLINE** - Smart Switch will automatically go active if any teammate is online, if all offline it will go inactive.
 - **AUTO-OFF-ANY-ONLINE** - Smart Switch will automatically go inactive if any teammate is online, if all offline it will go active.
+- **AUTO-ON-ANY-OFFLINE** - Smart Switch will automatically go active if any teammate is offline, if everyone is online it will go inactive.
+- **AUTO-OFF-ANY-OFFLINE** - Smart Switch will automatically go inactive if any teammate is offline, if everyone is online it will go active.
 
 <br>
 
