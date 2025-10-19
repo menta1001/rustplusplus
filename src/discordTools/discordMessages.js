@@ -78,7 +78,7 @@ module.exports = {
         }
     },
 
-    sendPassthroughMessage: async function (guildId, serverId, interaction = null) {
+    sendTeamsMessage: async function (guildId, serverId, interaction = null) {
         const instance = Client.client.getInstance(guildId);
 
         const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
@@ -89,15 +89,21 @@ module.exports = {
         const server = instance.serverList[serverId];
 
         const content = {
-            embeds: [DiscordEmbeds.getPassthroughEmbed(guildId, serverId)]
+            embeds: [DiscordEmbeds.getTeamsEmbed(guildId, serverId)]
         };
 
+        const existingMessageId = server.hasOwnProperty('teamsMessageId') ? server.teamsMessageId :
+            (server.hasOwnProperty('passthroughMessageId') ? server.passthroughMessageId : null);
+
         const message = await module.exports.sendMessage(guildId, content,
-            server.hasOwnProperty('passthroughMessageId') ? server.passthroughMessageId : null,
+            existingMessageId,
             teamsChannelId, interaction);
 
         if (!interaction && message) {
-            instance.serverList[serverId].passthroughMessageId = message.id;
+            instance.serverList[serverId].teamsMessageId = message.id;
+            if (instance.serverList[serverId].hasOwnProperty('passthroughMessageId')) {
+                delete instance.serverList[serverId].passthroughMessageId;
+            }
             Client.client.setInstance(guildId, instance);
         }
     },

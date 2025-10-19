@@ -213,6 +213,13 @@ module.exports = (client, guild) => {
     for (const [serverId, content] of Object.entries(instance.serverList)) {
         if (!content.hasOwnProperty('customCameraGroups')) content.customCameraGroups = {};
         if (!content.hasOwnProperty('connectionCheckIntervalMinutes')) content.connectionCheckIntervalMinutes = 0;
+        if (content.hasOwnProperty('passthroughMessageId')) {
+            if (!content.hasOwnProperty('teamsMessageId') || content.teamsMessageId === null) {
+                content.teamsMessageId = content.passthroughMessageId;
+            }
+            delete content.passthroughMessageId;
+        }
+        if (!content.hasOwnProperty('teamsMessageId')) content.teamsMessageId = null;
     }
 
     client.setInstance(guild.id, instance);
