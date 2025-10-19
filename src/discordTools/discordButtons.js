@@ -85,6 +85,12 @@ module.exports = {
             label: Client.client.intlGet(guildId, 'deleteUnreachableDevicesCap'),
             style: PRIMARY
         });
+        const intervalMinutes = server.connectionCheckIntervalMinutes ? server.connectionCheckIntervalMinutes : 0;
+        const autoReconnectButton = module.exports.getButton({
+            customId: `ServerAutoReconnect${identifier}`,
+            label: Client.client.intlGet(guildId, 'autoReconnectCap'),
+            style: intervalMinutes > 0 ? SUCCESS : SECONDARY
+        });
         const customTimersButton = module.exports.getButton({
             customId: `CustomTimersEdit${identifier}`,
             label: Client.client.intlGet(guildId, 'customTimersCap'),
@@ -130,7 +136,7 @@ module.exports = {
                     customTimersButton, trackerButton, groupButton
                 ),
                 new Discord.ActionRowBuilder().addComponents(
-                    deleteUnreachableDevicesButton
+                    deleteUnreachableDevicesButton, autoReconnectButton
                 )
             ];
         }
@@ -143,7 +149,7 @@ module.exports = {
                     customTimersButton, groupButton
                 ),
                 new Discord.ActionRowBuilder().addComponents(
-                    deleteUnreachableDevicesButton
+                    deleteUnreachableDevicesButton, autoReconnectButton
                 )
             ];
         }

@@ -57,6 +57,28 @@ module.exports = {
         return modal;
     },
 
+    getServerAutoReconnectModal(guildId, serverId) {
+        const instance = Client.client.getInstance(guildId);
+        const server = instance.serverList[serverId];
+        const identifier = JSON.stringify({ "serverId": serverId });
+
+        const modal = module.exports.getModal({
+            customId: `ServerAutoReconnect${identifier}`,
+            title: Client.client.intlGet(guildId, 'autoReconnectModalTitle')
+        });
+
+        modal.addComponents(
+            new Discord.ActionRowBuilder().addComponents(TextInput.getTextInput({
+                customId: 'ServerAutoReconnectInterval',
+                label: Client.client.intlGet(guildId, 'autoReconnectModalLabel'),
+                value: `${server.connectionCheckIntervalMinutes ? server.connectionCheckIntervalMinutes : 0}`,
+                style: Discord.TextInputStyle.Short
+            }))
+        );
+
+        return modal;
+    },
+
     getCustomTimersEditModal(guildId, serverId) {
         const instance = Client.client.getInstance(guildId);
         const server = instance.serverList[serverId];

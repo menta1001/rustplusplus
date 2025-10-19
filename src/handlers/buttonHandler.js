@@ -469,6 +469,18 @@ module.exports = async (client, interaction) => {
         const modal = DiscordModals.getServerEditModal(guildId, ids.serverId);
         await interaction.showModal(modal);
     }
+    else if (interaction.customId.startsWith('ServerAutoReconnect')) {
+        const ids = JSON.parse(interaction.customId.replace('ServerAutoReconnect', ''));
+        const server = instance.serverList[ids.serverId];
+
+        if (!server) {
+            await interaction.message.delete();
+            return;
+        }
+
+        const modal = DiscordModals.getServerAutoReconnectModal(guildId, ids.serverId);
+        await interaction.showModal(modal);
+    }
     else if (interaction.customId.startsWith('DeleteUnreachableDevices')) {
         const ids = JSON.parse(interaction.customId.replace('DeleteUnreachableDevices', ''));
         const server = instance.serverList[ids.serverId];
@@ -644,6 +656,7 @@ module.exports = async (client, interaction) => {
         await DiscordTools.deleteMessageById(guildId, instance.channelId.servers, server.messageId);
 
         delete instance.serverList[ids.serverId];
+        client.clearServerConnectionCheckTimer(guildId, ids.serverId);
         client.setInstance(guildId, instance);
     }
     else if (interaction.customId.startsWith('SmartSwitchOn') ||
