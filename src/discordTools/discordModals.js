@@ -23,6 +23,7 @@ const Discord = require('discord.js');
 const Client = require('../../index.ts');
 const TextInput = require('./discordTextInputs.js');
 const Timer = require('../util/timer');
+const Constants = require('../util/constants.js');
 
 module.exports = {
     getModal: function (options = {}) {
@@ -30,6 +31,31 @@ module.exports = {
 
         if (options.hasOwnProperty('customId')) modal.setCustomId(options.customId);
         if (options.hasOwnProperty('title')) modal.setTitle(options.title.slice(0, 45));
+
+        return modal;
+    },
+
+    getTrademarkCustomModal(guildId, currentTrademark, messageId, channelId) {
+        const identifier = JSON.stringify({ "messageId": messageId, "channelId": channelId });
+        const modal = module.exports.getModal({
+            customId: `TrademarkCustom${identifier}`,
+            title: Client.client.intlGet(guildId, 'customTrademarkModalTitle')
+        });
+
+        const defaultValue = currentTrademark && currentTrademark !== 'NOT SHOWING' ?
+            currentTrademark : '';
+
+        modal.addComponents(
+            new Discord.ActionRowBuilder().addComponents(TextInput.getTextInput({
+                customId: 'TrademarkCustomValue',
+                label: Client.client.intlGet(guildId, 'customTrademarkModalLabel'),
+                value: defaultValue,
+                style: Discord.TextInputStyle.Short,
+                minLength: 1,
+                maxLength: Math.min(32, Constants.MAX_LENGTH_TEAM_MESSAGE - 3),
+                required: true
+            }))
+        );
 
         return modal;
     },

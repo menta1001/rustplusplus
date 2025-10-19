@@ -23,6 +23,7 @@ const Discord = require('discord.js');
 const DiscordMessages = require('../discordTools/discordMessages.js');
 const DiscordSelectMenus = require('../discordTools/discordSelectMenus.js');
 const DiscordTools = require('../discordTools/discordTools.js');
+const DiscordModals = require('../discordTools/discordModals.js');
 
 module.exports = async (client, interaction) => {
     const instance = client.getInstance(interaction.guildId);
@@ -79,6 +80,17 @@ module.exports = async (client, interaction) => {
         });
     }
     else if (interaction.customId === 'Trademark') {
+        if (interaction.values[0] === 'CUSTOM') {
+            const modal = DiscordModals.getTrademarkCustomModal(
+                guildId,
+                instance.generalSettings.trademark,
+                interaction.message.id,
+                interaction.channelId);
+
+            await interaction.showModal(modal);
+            return;
+        }
+
         instance.generalSettings.trademark = interaction.values[0];
         client.setInstance(guildId, instance);
 

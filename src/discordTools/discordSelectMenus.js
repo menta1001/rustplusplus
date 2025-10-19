@@ -142,6 +142,11 @@ module.exports = {
                         value: 'RPP'
                     },
                     {
+                        label: Client.client.intlGet(guildId, 'customTrademarkLabel'),
+                        description: Client.client.intlGet(guildId, 'customTrademarkDescription'),
+                        value: 'CUSTOM'
+                    },
+                    {
                         label: Client.client.intlGet(guildId, 'notShowingCap'),
                         description: Client.client.intlGet(guildId, 'hideTrademark'),
                         value: 'NOT SHOWING'
