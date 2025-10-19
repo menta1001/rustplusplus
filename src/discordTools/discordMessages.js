@@ -59,6 +59,11 @@ module.exports = {
         const instance = Client.client.getInstance(guildId);
         const server = instance.serverList[serverId];
 
+        if (!server.hasOwnProperty('connectionCheckIntervalMinutes')) {
+            instance.serverList[serverId].connectionCheckIntervalMinutes = 0;
+            Client.client.setInstance(guildId, instance);
+        }
+
         const content = {
             embeds: [await DiscordEmbeds.getServerEmbed(guildId, serverId)],
             components: DiscordButtons.getServerButtons(guildId, serverId, state)

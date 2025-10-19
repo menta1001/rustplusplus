@@ -27,6 +27,7 @@ const Battlemetrics = require('../structures/Battlemetrics');
 const Cctv = require('./Cctv');
 const Config = require('../../config');
 const DiscordEmbeds = require('../discordTools/discordEmbeds.js');
+const DiscordMessages = require('../discordTools/discordMessages.js');
 const DiscordTools = require('../discordTools/discordTools');
 const InstanceUtils = require('../util/instanceUtils.js');
 const Items = require('./Items');
@@ -71,6 +72,9 @@ class DiscordBot extends Discord.Client {
         this.battlemetricsIntervalCounter = 0;
 
         this.voiceLeaveTimeouts = new Object();
+
+        this.serverConnectionCheckTimers = new Object();
+        this.serverConnectionCheckRunning = new Object();
 
         this.loadDiscordCommands();
         this.loadDiscordEvents();
@@ -238,7 +242,12 @@ class DiscordBot extends Discord.Client {
 
         if (firstTime) await PermissionHandler.resetPermissionsAllChannels(this, guild);
 
+        this.clearAllServerConnectionCheckTimers(guild.id);
         this.resetRustplusVariables(guild.id);
+
+        for (const serverId of Object.keys(instance.serverList)) {
+            this.updateServerConnectionCheckTimer(guild.id, serverId);
+        }
     }
 
     async syncCredentialsWithUsers(guild) {
@@ -344,6 +353,147 @@ class DiscordBot extends Discord.Client {
         if (this.rustplusLiteReconnectTimers[guildId]) {
             clearTimeout(this.rustplusLiteReconnectTimers[guildId]);
             this.rustplusLiteReconnectTimers[guildId] = null;
+        }
+    }
+
+    ensureServerConnectionCheckContainers(guildId) {
+        if (!this.serverConnectionCheckTimers.hasOwnProperty(guildId)) {
+            this.serverConnectionCheckTimers[guildId] = new Object();
+        }
+        if (!this.serverConnectionCheckRunning.hasOwnProperty(guildId)) {
+            this.serverConnectionCheckRunning[guildId] = new Object();
+        }
+    }
+
+    clearServerConnectionCheckTimer(guildId, serverId) {
+        if (this.serverConnectionCheckTimers.hasOwnProperty(guildId) &&
+            this.serverConnectionCheckTimers[guildId].hasOwnProperty(serverId)) {
+            clearInterval(this.serverConnectionCheckTimers[guildId][serverId]);
+            delete this.serverConnectionCheckTimers[guildId][serverId];
+        }
+        if (this.serverConnectionCheckRunning.hasOwnProperty(guildId) &&
+            this.serverConnectionCheckRunning[guildId].hasOwnProperty(serverId)) {
+            delete this.serverConnectionCheckRunning[guildId][serverId];
+        }
+    }
+
+    clearAllServerConnectionCheckTimers(guildId) {
+        if (this.serverConnectionCheckTimers.hasOwnProperty(guildId)) {
+            for (const timer of Object.values(this.serverConnectionCheckTimers[guildId])) {
+                clearInterval(timer);
+            }
+            delete this.serverConnectionCheckTimers[guildId];
+        }
+        if (this.serverConnectionCheckRunning.hasOwnProperty(guildId)) {
+            delete this.serverConnectionCheckRunning[guildId];
+        }
+    }
+
+    updateServerConnectionCheckTimer(guildId, serverId) {
+        this.ensureServerConnectionCheckContainers(guildId);
+        this.clearServerConnectionCheckTimer(guildId, serverId);
+
+        const instance = this.getInstance(guildId);
+        if (!instance || !instance.serverList.hasOwnProperty(serverId)) return;
+
+        const server = instance.serverList[serverId];
+        const intervalMinutes = server.connectionCheckIntervalMinutes ?
+            parseInt(server.connectionCheckIntervalMinutes) : 0;
+
+        if (!intervalMinutes || intervalMinutes <= 0) return;
+
+        const intervalMs = intervalMinutes * 60 * 1000;
+        const runner = async () => {
+            try {
+                await this.performServerConnectionCheck(guildId, serverId);
+            }
+            catch (error) {
+                this.log(this.intlGet(null, 'errorCap'),
+                    this.intlGet(null, 'autoReconnectCheckFailed', { error: `${error}` }), 'error');
+            }
+        };
+
+        this.serverConnectionCheckTimers[guildId][serverId] = setInterval(runner, intervalMs);
+        runner();
+    }
+
+    async performServerConnectionCheck(guildId, serverId) {
+        this.ensureServerConnectionCheckContainers(guildId);
+
+        if (this.serverConnectionCheckRunning[guildId][serverId]) return;
+        this.serverConnectionCheckRunning[guildId][serverId] = true;
+
+        try {
+            const instance = this.getInstance(guildId);
+            if (!instance || !instance.serverList.hasOwnProperty(serverId)) {
+                this.clearServerConnectionCheckTimer(guildId, serverId);
+                return;
+            }
+
+            const server = instance.serverList[serverId];
+            const intervalMinutes = server.connectionCheckIntervalMinutes ?
+                parseInt(server.connectionCheckIntervalMinutes) : 0;
+
+            if (!intervalMinutes || intervalMinutes <= 0) {
+                this.clearServerConnectionCheckTimer(guildId, serverId);
+                return;
+            }
+
+            if (instance.activeServer !== serverId) return;
+            if (this.rustplusReconnecting[guildId]) return;
+
+            const rustplus = this.rustplusInstances[guildId];
+
+            if (!rustplus || rustplus.serverId !== serverId) {
+                await DiscordMessages.sendServerMessage(guildId, serverId, 2);
+                this.resetRustplusVariables(guildId);
+                this.createRustplusInstance(
+                    guildId,
+                    server.serverIp,
+                    server.appPort,
+                    server.steamId,
+                    server.playerToken);
+                this.log(this.intlGet(null, 'infoCap'),
+                    this.intlGet(null, 'autoReconnectTriggered', { server: server.title }));
+                return;
+            }
+
+            if (!this.activeRustplusInstances[guildId]) {
+                if (!rustplus) {
+                    await DiscordMessages.sendServerMessage(guildId, serverId, 2);
+                    this.createRustplusInstance(
+                        guildId,
+                        server.serverIp,
+                        server.appPort,
+                        server.steamId,
+                        server.playerToken);
+                    this.log(this.intlGet(null, 'infoCap'),
+                        this.intlGet(null, 'autoReconnectTriggered', { server: server.title }));
+                }
+                return;
+            }
+
+            if (!rustplus.isOperational && rustplus.isNewConnection) return;
+
+            const response = await rustplus.getInfoAsync(5000);
+            if (!(await rustplus.isResponseValid(response))) {
+                await DiscordMessages.sendServerMessage(guildId, serverId, 2);
+                this.resetRustplusVariables(guildId);
+                rustplus.isDeleted = true;
+                rustplus.disconnect();
+                delete this.rustplusInstances[guildId];
+                this.createRustplusInstance(
+                    guildId,
+                    server.serverIp,
+                    server.appPort,
+                    server.steamId,
+                    server.playerToken);
+                this.log(this.intlGet(null, 'infoCap'),
+                    this.intlGet(null, 'autoReconnectTriggered', { server: server.title }));
+            }
+        }
+        finally {
+            this.serverConnectionCheckRunning[guildId][serverId] = false;
         }
     }
 

@@ -102,6 +102,47 @@ module.exports = async (client, interaction) => {
         /* To force search of player name via scrape */
         client.battlemetricsIntervalCounter = 0;
     }
+    else if (interaction.customId.startsWith('ServerAutoReconnect')) {
+        const ids = JSON.parse(interaction.customId.replace('ServerAutoReconnect', ''));
+        const server = instance.serverList[ids.serverId];
+
+        if (!server) {
+            interaction.deferUpdate();
+            return;
+        }
+
+        let intervalMinutes = 0;
+        let invalidInterval = false;
+        const value = interaction.fields.getTextInputValue('ServerAutoReconnectInterval');
+        try {
+            intervalMinutes = parseInt(value);
+            if (isNaN(intervalMinutes) || intervalMinutes < 0) {
+                intervalMinutes = 0;
+                invalidInterval = true;
+            }
+        }
+        catch (e) {
+            intervalMinutes = 0;
+            invalidInterval = true;
+        }
+
+        server.connectionCheckIntervalMinutes = intervalMinutes;
+        client.setInstance(guildId, instance);
+
+        client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'modalValueChange', {
+            id: `${verifyId}`,
+            value: `${intervalMinutes}`
+        }));
+
+        if (invalidInterval) {
+            client.log(client.intlGet(null, 'warningCap'),
+                client.intlGet(null, 'autoReconnectInvalidInterval'));
+        }
+
+        client.updateServerConnectionCheckTimer(guildId, ids.serverId);
+
+        await DiscordMessages.sendServerMessage(guildId, ids.serverId);
+    }
     else if (interaction.customId.startsWith('SmartSwitchEdit')) {
         const ids = JSON.parse(interaction.customId.replace('SmartSwitchEdit', ''));
         const server = instance.serverList[ids.serverId];

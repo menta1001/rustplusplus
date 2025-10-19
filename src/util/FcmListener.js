@@ -257,7 +257,8 @@ async function pairingServer(client, guild, title, message, body) {
         oilRigLockedCrateUnlockTimeMs: server ? server.oilRigLockedCrateUnlockTimeMs :
             Constants.DEFAULT_OIL_RIG_LOCKED_CRATE_UNLOCK_TIME_MS,
         timeTillDay: server ? server.timeTillDay : null,
-        timeTillNight: server ? server.timeTillNight : null
+        timeTillNight: server ? server.timeTillNight : null,
+        connectionCheckIntervalMinutes: server ? server.connectionCheckIntervalMinutes : 0
     };
 
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
@@ -269,6 +270,8 @@ async function pairingServer(client, guild, title, message, body) {
         playerToken: body.playerToken,
     };
     client.setInstance(guild.id, instance);
+
+    client.updateServerConnectionCheckTimer(guild.id, serverId);
 
     await DiscordMessages.sendServerMessage(guild.id, serverId, null);
 }

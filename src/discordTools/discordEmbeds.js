@@ -73,6 +73,7 @@ module.exports = {
         const instance = Client.client.getInstance(guildId);
         const credentials = InstanceUtils.readCredentialsFile(guildId);
         const server = instance.serverList[serverId];
+        const intervalMinutes = server.connectionCheckIntervalMinutes ? server.connectionCheckIntervalMinutes : 0;
         let hoster = Client.client.intlGet(guildId, 'unknown');
         if (credentials.hasOwnProperty(server.steamId)) {
             hoster = await DiscordTools.getUserById(guildId, credentials[server.steamId].discord_user_id);
@@ -108,6 +109,13 @@ module.exports = {
             {
                 name: Client.client.intlGet(guildId, 'hoster'),
                 value: `\`${hoster} (${server.steamId})\``,
+                inline: false
+            },
+            {
+                name: Client.client.intlGet(guildId, 'autoReconnectCap'),
+                value: intervalMinutes > 0 ?
+                    Client.client.intlGet(guildId, 'autoReconnectEveryMinutes', { minutes: intervalMinutes }) :
+                    Client.client.intlGet(guildId, 'autoReconnectDisabled'),
                 inline: false
             }]
         });
