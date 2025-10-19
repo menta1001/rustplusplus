@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Re-run the script with Bash when invoked by another shell (e.g. `sh`).
+if [ -z "${BASH_VERSION:-}" ]; then
+    exec /usr/bin/env bash "$0" "$@"
+fi
+
 set -euo pipefail
 
 #
