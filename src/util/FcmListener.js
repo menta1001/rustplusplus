@@ -219,7 +219,33 @@ function isValidUrl(url) {
 async function pairingServer(client, guild, title, message, body) {
     const instance = client.getInstance(guild.id);
     const serverId = `${body.ip}-${body.port}`;
-    const server = instance.serverList[serverId];
+    let server = instance.serverList[serverId];
+    let previousServerId = null;
+
+    if (!server) {
+        const candidates = Object.entries(instance.serverList)
+            .filter(([id, data]) => {
+                if (id === serverId) return false;
+                if (!data) return false;
+                return data.serverIp === body.ip;
+            });
+
+        if (candidates.length > 0) {
+            const preferred = candidates.find(([, data]) =>
+                data.steamId === body.playerId || data.title === title);
+
+            if (preferred) {
+                previousServerId = preferred[0];
+                server = preferred[1];
+            }
+            else if (candidates.length === 1) {
+                previousServerId = candidates[0][0];
+                server = candidates[0][1];
+            }
+        }
+    }
+
+    const wasActiveServer = previousServerId !== null && instance.activeServer === previousServerId;
 
     let messageObj = undefined;
     if (server) messageObj = await DiscordTools.getMessageById(guild.id, instance.channelId.servers, server.messageId);
@@ -262,6 +288,22 @@ async function pairingServer(client, guild, title, message, body) {
         timeTillNight: server ? server.timeTillNight : null,
         connectionCheckIntervalMinutes: server ? server.connectionCheckIntervalMinutes : 0
     };
+
+    if (previousServerId && previousServerId !== serverId) {
+        if (wasActiveServer) instance.activeServer = serverId;
+
+        if (instance.serverListLite.hasOwnProperty(previousServerId)) {
+            if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
+            instance.serverListLite[serverId] = {
+                ...instance.serverListLite[previousServerId],
+                ...instance.serverListLite[serverId]
+            };
+            delete instance.serverListLite[previousServerId];
+        }
+
+        delete instance.serverList[previousServerId];
+        client.clearServerConnectionCheckTimer(guild.id, previousServerId);
+    }
 
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
 
