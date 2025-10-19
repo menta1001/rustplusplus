@@ -25,7 +25,7 @@ module.exports = {
     handler: async function (rustplus, client, teamInfo) {
         /* Handle team changes */
         await module.exports.checkChanges(rustplus, client, teamInfo);
-        await module.exports.updatePassthroughList(rustplus, client);
+        await module.exports.updateTeamsList(rustplus, client);
     },
 
     checkChanges: async function (rustplus, client, teamInfo) {
@@ -133,36 +133,36 @@ module.exports = {
         }
     },
 
-    updatePassthroughList: async function (rustplus, client) {
+    updateTeamsList: async function (rustplus, client) {
         const instance = client.getInstance(rustplus.guildId);
         const serverId = rustplus.serverId;
 
-        const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+        const teamsChannelId = instance.channelId.teams;
 
         if (!teamsChannelId) return;
         if (!instance.serverList.hasOwnProperty(serverId)) return;
         if (!instance.serverListLite.hasOwnProperty(serverId)) return;
 
-        const passthrough = instance.serverListLite[serverId];
-        if (Object.keys(passthrough).length === 0) return;
+        const pairedPlayers = instance.serverListLite[serverId];
+        if (Object.keys(pairedPlayers).length === 0) return;
 
         let hasChanges = false;
         for (const player of rustplus.team.players) {
-            if (passthrough.hasOwnProperty(player.steamId)) {
-                const currentName = passthrough[player.steamId].hasOwnProperty('name') ?
-                    passthrough[player.steamId].name : null;
+            if (pairedPlayers.hasOwnProperty(player.steamId)) {
+                const currentName = pairedPlayers[player.steamId].hasOwnProperty('name') ?
+                    pairedPlayers[player.steamId].name : null;
                 if (currentName !== player.name) {
-                    passthrough[player.steamId].name = player.name;
+                    pairedPlayers[player.steamId].name = player.name;
                     hasChanges = true;
                 }
             }
         }
 
         if (hasChanges) {
-            instance.serverListLite[serverId] = passthrough;
+            instance.serverListLite[serverId] = pairedPlayers;
             client.setInstance(rustplus.guildId, instance);
         }
 
-        await DiscordMessages.sendPassthroughMessage(rustplus.guildId, serverId);
+        await DiscordMessages.sendTeamsMessage(rustplus.guildId, serverId);
     }
 };

@@ -121,7 +121,7 @@ module.exports = {
         });
     },
 
-    getPassthroughEmbed: function (guildId, serverId) {
+    getTeamsEmbed: function (guildId, serverId) {
         const instance = Client.client.getInstance(guildId);
         const server = instance.serverList[serverId];
         const passthrough = instance.serverListLite.hasOwnProperty(serverId) ?
@@ -158,7 +158,7 @@ module.exports = {
 
         const activePlayers = [];
         const inactivePlayers = [];
-        const noneValue = Client.client.intlGet(guildId, 'passthroughNone');
+        const noneValue = Client.client.intlGet(guildId, 'teamsNone');
 
         for (const player of players) {
             const nameLink = `[${player.name}](${Constants.STEAM_PROFILES_URL}${player.steamId})`;
@@ -183,16 +183,16 @@ module.exports = {
         }
 
         return module.exports.getEmbed({
-            title: Client.client.intlGet(guildId, 'passthroughListTitle', { server: server.title }),
+            title: Client.client.intlGet(guildId, 'teamsListTitle', { server: server.title }),
             color: Constants.COLOR_DEFAULT,
             fields: [
                 {
-                    name: Client.client.intlGet(guildId, 'passthroughActive'),
+                    name: Client.client.intlGet(guildId, 'teamsActive'),
                     value: activePlayers.join('\n'),
                     inline: false
                 },
                 {
-                    name: Client.client.intlGet(guildId, 'passthroughInactive'),
+                    name: Client.client.intlGet(guildId, 'teamsInactive'),
                     value: inactivePlayers.join('\n'),
                     inline: false
                 }
