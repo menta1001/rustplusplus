@@ -25,7 +25,7 @@ module.exports = {
     handler: async function (rustplus, client, teamInfo) {
         /* Handle team changes */
         await module.exports.checkChanges(rustplus, client, teamInfo);
-        await module.exports.updatePassthroughList(rustplus, client);
+        await module.exports.updatePassthroughList(rustplus, client, teamInfo);
     },
 
     checkChanges: async function (rustplus, client, teamInfo) {
@@ -133,7 +133,7 @@ module.exports = {
         }
     },
 
-    updatePassthroughList: async function (rustplus, client) {
+    updatePassthroughList: async function (rustplus, client, teamInfo) {
         const instance = client.getInstance(rustplus.guildId);
         const serverId = rustplus.serverId;
 
@@ -153,23 +153,39 @@ module.exports = {
 
         const roster = instance.teamRosterHistory[serverId];
 
-        for (const player of rustplus.team.players) {
-            const steamId = player.steamId.toString();
+        const ensureRosterEntry = (steamId, possibleName) => {
             const storedPlayer = roster[steamId];
-            const playerName = player.name ?? '';
-            const sanitizedName = playerName.trim() !== '' ? playerName : (storedPlayer ? storedPlayer.name : '');
+            const candidateName = typeof possibleName === 'string' ? possibleName.trim() : '';
+            const fallbackName = storedPlayer ? storedPlayer.name : '';
+            const resolvedName = candidateName !== '' ? candidateName : fallbackName;
 
             if (!storedPlayer) {
                 roster[steamId] = {
                     steamId: steamId,
-                    name: sanitizedName
+                    name: resolvedName
                 };
                 hasChanges = true;
             }
-            else if (storedPlayer.name !== sanitizedName) {
-                roster[steamId].name = sanitizedName;
+            else if (storedPlayer.name !== resolvedName) {
+                roster[steamId].name = resolvedName;
                 hasChanges = true;
             }
+        };
+
+        const processedSteamIds = new Set();
+
+        const members = teamInfo && Array.isArray(teamInfo.members) ? teamInfo.members : [];
+        for (const member of members) {
+            const steamId = member?.steamId?.toString();
+            if (!steamId) continue;
+            ensureRosterEntry(steamId, member.name ?? '');
+            processedSteamIds.add(steamId);
+        }
+
+        for (const player of rustplus.team.players) {
+            const steamId = player.steamId.toString();
+            if (processedSteamIds.has(steamId)) continue;
+            ensureRosterEntry(steamId, player.name ?? '');
         }
 
         if (hasChanges) {
