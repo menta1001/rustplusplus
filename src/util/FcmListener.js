@@ -277,6 +277,7 @@ async function pairingServer(client, guild, title, message, body) {
         switchGroups: server ? server.switchGroups : {},
         messageId: (messageObj !== undefined) ? messageObj.id : null,
         teamsMessageId: server ? server.teamsMessageId : null,
+        marketMessageId: server ? server.marketMessageId : null,
         battlemetricsId: battlemetricsId,
         connect: (!bmInstance.lastUpdateSuccessful) ? null :
             `connect ${bmInstance.server_ip}:${bmInstance.server_port}`,

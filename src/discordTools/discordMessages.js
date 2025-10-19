@@ -195,6 +195,26 @@ module.exports = {
         }
     },
 
+    sendMarketListingsMessage: async function (guildId, serverId, interaction = null) {
+        const instance = Client.client.getInstance(guildId);
+        const channelId = instance.channelId.market;
+
+        if (!channelId) return;
+        if (!instance.serverList.hasOwnProperty(serverId)) return;
+
+        const content = {
+            embeds: [DiscordEmbeds.getMarketListingsEmbed(guildId, serverId)]
+        };
+
+        const messageId = instance.serverList[serverId].marketMessageId || null;
+        const message = await module.exports.sendMessage(guildId, content, messageId, channelId, interaction);
+
+        if (!interaction && message) {
+            instance.serverList[serverId].marketMessageId = message.id;
+            Client.client.setInstance(guildId, instance);
+        }
+    },
+
     sendSmartSwitchGroupMessage: async function (guildId, serverId, groupId, interaction = null) {
         const instance = Client.client.getInstance(guildId);
         const group = instance.serverList[serverId].switchGroups[groupId];

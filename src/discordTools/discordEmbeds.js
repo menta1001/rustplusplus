@@ -24,6 +24,7 @@ const Client = require('../../index.ts');
 const Constants = require('../util/constants.js');
 const DiscordTools = require('./discordTools.js');
 const InstanceUtils = require('../util/instanceUtils.js');
+const MarketUtils = require('../util/marketUtils.js');
 const Timer = require('../util/timer');
 
 function isValidUrl(url) {
@@ -452,6 +453,66 @@ module.exports = {
                 { name: Client.client.intlGet(guildId, 'item'), value: itemName, inline: true },
                 { name: Client.client.intlGet(guildId, 'quantity'), value: itemQuantity, inline: true }
             ],
+            timestamp: true
+        });
+    },
+
+    getMarketListingsEmbed: function (guildId, serverId) {
+        const instance = Client.client.getInstance(guildId);
+        const server = instance.serverList[serverId];
+        const rustplus = Client.client.rustplusInstances[guildId];
+
+        const orderTypes = ['all', 'buy', 'sell'];
+        const hasTrackedItems = orderTypes.some(orderType =>
+            Array.isArray(instance.marketSubscriptionList[orderType]) &&
+            instance.marketSubscriptionList[orderType].length > 0);
+
+        const serverTitle = server ? server.title : '';
+        const footer = { text: serverTitle };
+
+        if (!hasTrackedItems) {
+            return module.exports.getEmbed({
+                color: Constants.COLOR_DEFAULT,
+                title: Client.client.intlGet(guildId, 'marketListingsTitle', { server: serverTitle }),
+                description: Client.client.intlGet(guildId, 'marketListingsNoTrackedItems'),
+                footer: footer,
+                timestamp: true
+            });
+        }
+
+        const isConnected = rustplus && rustplus.serverId === serverId && rustplus.isOperational;
+
+        if (!isConnected) {
+            return module.exports.getEmbed({
+                color: Constants.COLOR_DEFAULT,
+                title: Client.client.intlGet(guildId, 'marketListingsTitle', { server: serverTitle }),
+                description: Client.client.intlGet(guildId, 'notConnectedToRustServer'),
+                footer: footer,
+                timestamp: true
+            });
+        }
+
+        const sections = [];
+
+        for (const orderType of orderTypes) {
+            const heading = `__**${Client.client.intlGet(guildId, orderType)}**__`;
+            const trackedItems = instance.marketSubscriptionList[orderType] || [];
+            const lines = MarketUtils.collectMatchingOrders(rustplus, Client.client, guildId, trackedItems, orderType);
+            const diffBlock = MarketUtils.formatDiffLines(lines, 1200);
+
+            let body = diffBlock;
+            if (body === null) {
+                body = Client.client.intlGet(guildId, 'marketListingsNoMatches');
+            }
+
+            sections.push(`${heading}\n${body}`);
+        }
+
+        return module.exports.getEmbed({
+            color: Constants.COLOR_DEFAULT,
+            title: Client.client.intlGet(guildId, 'marketListingsTitle', { server: serverTitle }),
+            description: sections.join('\n\n'),
+            footer: footer,
             timestamp: true
         });
     },
