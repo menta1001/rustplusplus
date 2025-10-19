@@ -21,21 +21,37 @@
 const Fs = require('fs');
 const Path = require('path');
 
+const htmlReservedSymbols = JSON.parse(
+    Fs.readFileSync(
+        Path.join(__dirname, '..', 'staticFiles', 'htmlReservedSymbols.json'),
+        'utf8',
+    ),
+);
+
+Object.freeze(htmlReservedSymbols);
+
+function coerceToString(value) {
+    if (typeof value === 'string') return value;
+    if (value === null || value === undefined) return '';
+    return String(value);
+}
+
 module.exports = {
     parseArgs: function (str) {
-        return str.trim().split(/[ ]+/);
+        const input = coerceToString(str).trim();
+        return input === '' ? [] : input.split(/\s+/);
     },
 
     getArgs: function (str, n = 0) {
         const args = this.parseArgs(str);
-        if (isNaN(n)) n = 0;
-        if (n < 1) return args;
+        const limit = Number.parseInt(n, 10);
+        if (!Number.isFinite(limit) || limit < 1) return args;
         const newArgs = [];
 
-        let remain = str;
+        let remain = coerceToString(str);
         let counter = 1;
         for (const arg of args) {
-            if (counter === n) {
+            if (counter === limit) {
                 newArgs.push(remain);
                 break;
             }
@@ -48,48 +64,67 @@ module.exports = {
     },
 
     decodeHtml: function (str) {
-        const htmlReservedSymbols = JSON.parse(Fs.readFileSync(
-            Path.join(__dirname, '..', 'staticFiles', 'htmlReservedSymbols.json'), 'utf8'));
+        let decoded = coerceToString(str);
 
         for (const [key, value] of Object.entries(htmlReservedSymbols)) {
-            str = str.replace(key, value);
+            if (decoded.includes(key)) {
+                decoded = decoded.split(key).join(value);
+            }
         }
 
-        return str;
+        return decoded;
     },
 
     removeInvisibleCharacters: function (str) {
-        str = str.replace(/[\u200B-\u200D\uFEFF]/g, '');
-        return str.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+        const input = coerceToString(str);
+        if (input === '') return input;
+
+        const withoutZeroWidth = input.replace(/[\u200B-\u200D\uFEFF]/g, '');
+        return withoutZeroWidth.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
     },
 
     findClosestString: function (string, array, threshold = 2) {
+        if (!Array.isArray(array) || array.length === 0) return null;
+
+        const parsedThreshold = Number(threshold);
+        const numericThreshold = Number.isFinite(parsedThreshold)
+            ? Math.max(0, parsedThreshold)
+            : 2;
+
         let minDistance = Infinity;
         let closestString = null;
+        let foundCandidate = false;
+
+        const target = coerceToString(string);
 
         for (let i = 0; i < array.length; i++) {
             const currentString = array[i];
-            const distance = levenshteinDistance(string, currentString);
+            if (typeof currentString !== 'string') continue;
+
+            const distance = levenshteinDistance(target, currentString);
 
             if (distance < minDistance) {
                 minDistance = distance;
                 closestString = currentString;
+                foundCandidate = true;
             }
 
             if (minDistance === 0) break;
         }
 
-        return minDistance > threshold ? null : closestString;
+        if (!foundCandidate) return null;
+
+        return minDistance > numericThreshold ? null : closestString;
     },
 }
 
 /* Function to calculate Levenshtein distance between two strings */
 function levenshteinDistance(s1, s2) {
-    s1 = s1.toLowerCase();
-    s2 = s2.toLowerCase();
+    const left = coerceToString(s1).toLowerCase();
+    const right = coerceToString(s2).toLowerCase();
 
-    const m = s1.length;
-    const n = s2.length;
+    const m = left.length;
+    const n = right.length;
     const dp = [];
 
     for (let i = 0; i <= m; i++) {
@@ -101,7 +136,7 @@ function levenshteinDistance(s1, s2) {
 
     for (let i = 1; i <= m; i++) {
         for (let j = 1; j <= n; j++) {
-            if (s1[i - 1] === s2[j - 1]) {
+            if (left[i - 1] === right[j - 1]) {
                 dp[i][j] = dp[i - 1][j - 1];
             }
             else {
