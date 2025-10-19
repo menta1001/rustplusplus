@@ -101,6 +101,7 @@
     "channelNameEvents": "ereignisse",
     "channelNameInformation": "informationen",
     "channelNameServers": "server",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "einstellungen",
     "channelNameStorageMonitors": "lagermonitore",
     "channelNameSwitchGroups": "schalter-gruppen",
@@ -714,6 +715,10 @@
     "switches": "Schalter",
     "teamMember": "Teammitglied",
     "teamMemberInfo": "Teammitglied-Informationen",
+    "passthroughListTitle": "Paired Players - {server}",
+    "passthroughActive": "Active",
+    "passthroughInactive": "Inactive",
+    "passthroughNone": "No passthrough players found.",
     "theDome": "Kugeltank",
     "theIdOfTheItem": "Die ID des Gegenstandes.",
     "theNameOfTheItem": "Der Name des Gegenstandes.",
@@ -814,10 +819,5 @@
     "wipeDetected": "Wipe erkannt!",
     "yield": "Ertrag",
     "youAreAlreadyLeader": "Du bist bereits Anführer.",
-    "youAreNotPairedWithServer": "Anführer-Befehl funktioniert nicht, weil du nicht mit dem Server gekoppelt bist.",
-    "channelNameTeams": "teams",
-    "teamsListTitle": "Paired Players - {server}",
-    "teamsActive": "Active",
-    "teamsInactive": "Inactive",
-    "teamsNone": "No paired players found."
+    "youAreNotPairedWithServer": "Anführer-Befehl funktioniert nicht, weil du nicht mit dem Server gekoppelt bist."
 }
