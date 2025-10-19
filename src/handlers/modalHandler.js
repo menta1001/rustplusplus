@@ -25,6 +25,8 @@ const Constants = require('../util/constants.js');
 const DiscordMessages = require('../discordTools/discordMessages.js');
 const Keywords = require('../util/keywords.js');
 const Scrape = require('../util/scrape.js');
+const Timer = require('../util/timer');
+const SmartSwitchGroupHandler = require('./smartSwitchGroupHandler.js');
 
 module.exports = async (client, interaction) => {
     const instance = client.getInstance(interaction.guildId);
@@ -195,7 +197,33 @@ module.exports = async (client, interaction) => {
             return;
         }
 
+        const group = SmartSwitchGroupHandler.ensureGroupSyncDefaults(instance, ids.serverId, ids.groupId);
+
+        const groupSyncDelayInput = interaction.fields.getTextInputValue('GroupSyncDelay').trim();
+        let syncDelay = group.syncDelay;
+
+        if (groupSyncDelayInput !== '') {
+            const parsedDelay = Timer.getSecondsFromStringTime(groupSyncDelayInput);
+            if (parsedDelay === null) {
+                await interaction.reply({
+                    content: client.intlGet(guildId, 'timeFormatInvalid'),
+                    ephemeral: true
+                });
+                return;
+            }
+            syncDelay = parsedDelay;
+        }
+        else {
+            syncDelay = 0;
+        }
+
         server.switchGroups[ids.groupId].name = groupName;
+        server.switchGroups[ids.groupId].syncDelay = syncDelay;
+
+        if (syncDelay <= 0) {
+            const rustplusInstance = client.rustplusInstances[guildId];
+            SmartSwitchGroupHandler.clearGroupSyncTimeouts(rustplusInstance, ids.groupId);
+        }
 
         if (groupCommand !== server.switchGroups[ids.groupId].command &&
             !Keywords.getListOfUsedKeywords(client, interaction.guildId, ids.serverId).includes(groupCommand)) {
@@ -205,7 +233,7 @@ module.exports = async (client, interaction) => {
 
         client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'modalValueChange', {
             id: `${verifyId}`,
-            value: `${groupName}, ${server.switchGroups[ids.groupId].command}`
+            value: `${groupName}, ${server.switchGroups[ids.groupId].command}, ${syncDelay}`
         }));
 
         await DiscordMessages.sendSmartSwitchGroupMessage(interaction.guildId, ids.serverId, ids.groupId);
@@ -226,7 +254,12 @@ module.exports = async (client, interaction) => {
             return;
         }
 
+        const group = SmartSwitchGroupHandler.ensureGroupSyncDefaults(instance, ids.serverId, ids.groupId);
+
         server.switchGroups[ids.groupId].switches.push(switchId);
+        if (group.syncEnabled && server.switches.hasOwnProperty(switchId)) {
+            server.switchGroups[ids.groupId].syncState[switchId] = server.switches[switchId].active;
+        }
         client.setInstance(interaction.guildId, instance);
 
         client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'modalValueChange', {
@@ -246,8 +279,14 @@ module.exports = async (client, interaction) => {
             return;
         }
 
+        const group = SmartSwitchGroupHandler.ensureGroupSyncDefaults(instance, ids.serverId, ids.groupId);
+
         server.switchGroups[ids.groupId].switches =
             server.switchGroups[ids.groupId].switches.filter(e => e !== switchId);
+        delete server.switchGroups[ids.groupId].syncState[switchId];
+
+        const rustplus = client.rustplusInstances[guildId];
+        SmartSwitchGroupHandler.clearGroupSyncTimeouts(rustplus, ids.groupId, switchId);
         client.setInstance(interaction.guildId, instance);
 
         client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'modalValueChange', {

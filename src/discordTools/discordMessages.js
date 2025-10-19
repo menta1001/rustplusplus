@@ -199,6 +199,23 @@ module.exports = {
         const instance = Client.client.getInstance(guildId);
         const group = instance.serverList[serverId].switchGroups[groupId];
 
+        let updated = false;
+        if (!group.hasOwnProperty('syncEnabled')) {
+            group.syncEnabled = false;
+            updated = true;
+        }
+        if (!group.hasOwnProperty('syncDelay')) {
+            group.syncDelay = 60;
+            updated = true;
+        }
+        if (!group.hasOwnProperty('syncState') || typeof group.syncState !== 'object' || group.syncState === null) {
+            group.syncState = {};
+            updated = true;
+        }
+        if (updated) {
+            Client.client.setInstance(guildId, instance);
+        }
+
         const content = {
             embeds: [DiscordEmbeds.getSmartSwitchGroupEmbed(guildId, serverId, groupId)],
             components: DiscordButtons.getSmartSwitchGroupButtons(guildId, serverId, groupId),

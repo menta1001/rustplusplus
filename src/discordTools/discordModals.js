@@ -22,6 +22,7 @@ const Discord = require('discord.js');
 
 const Client = require('../../index.ts');
 const TextInput = require('./discordTextInputs.js');
+const Timer = require('../util/timer');
 
 module.exports = {
     getModal: function (options = {}) {
@@ -159,12 +160,17 @@ module.exports = {
         const group = instance.serverList[serverId].switchGroups[groupId];
         const identifier = JSON.stringify({ "serverId": serverId, "groupId": groupId });
 
+        if (!group.hasOwnProperty('syncDelay')) group.syncDelay = 60;
+
         const modal = module.exports.getModal({
             customId: `GroupEdit${identifier}`,
             title: Client.client.intlGet(guildId, 'editingOf', {
                 entity: group.name.length > 18 ? `${group.name.slice(0, 18)}..` : group.name
             })
         });
+
+        const syncDelayValue = group.syncDelay && group.syncDelay > 0 ?
+            Timer.secondsToFullScale(group.syncDelay) : '';
 
         modal.addComponents(
             new Discord.ActionRowBuilder().addComponents(TextInput.getTextInput({
@@ -178,6 +184,13 @@ module.exports = {
                 label: Client.client.intlGet(guildId, 'customCommand'),
                 value: group.command,
                 style: Discord.TextInputStyle.Short
+            })),
+            new Discord.ActionRowBuilder().addComponents(TextInput.getTextInput({
+                customId: 'GroupSyncDelay',
+                label: Client.client.intlGet(guildId, 'groupSyncDelayLabel'),
+                value: syncDelayValue,
+                style: Discord.TextInputStyle.Short,
+                required: false
             }))
         );
 
