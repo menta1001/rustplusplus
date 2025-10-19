@@ -55,6 +55,7 @@
 - **team** - Get team information (names of all teammates).
 - **time** - Get In-Game time.
 - **timer/timers** - Setup timers.
+- **tracker** - Display tracked player information using configured trackers.
 - **tr** - Translate from English to another language.
 - **trf** - Translate from one language to another.
 - **tts** - Text-To-Speech (Need to have teamchat open in Discord).

@@ -386,6 +386,7 @@ In-Game Command | Description
 [**team**](commands.md#team) | Get the names of all members in the team.
 [**time**](commands.md#time) | Get the current time In-Game and time till day/night.
 [**timer**](commands.md#timer) | Set custom timers that will notify whenever the timer have expired.
+[**tracker**](commands.md#tracker-ingame) | Display tracked player information using configured trackers.
 [**tr**](commands.md#tr) | Translate a text to another language.
 [**trf**](commands.md#trf) | Translate a text from one language to another.
 [**tts**](commands.md#tts) | Send a Text-To-Speech message to the Discord teamchat channel.
@@ -673,6 +674,14 @@ Subcommand | Description | Required
 `remove` | Remove a custom timer (`!timer remove <id>`). | `False`
 
 ![In-Game Command timer Image](images/ingame_commands/timer_ingame.png)
+
+
+## **tracker ingame**
+
+> **Display tracked player information using configured trackers.**
+<br>Command: `!tracker <tracker-name-or-id>`
+<br>Command: `!tracker info <tracker-name-or-id>`
+<br>Command: `!tracker add <tracker name> <steamId|playerId>`
 
 
 ## **tr**

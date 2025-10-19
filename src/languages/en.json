@@ -887,7 +887,7 @@
     "trackerRemovePlayerDesc": "Remove Player from {tracker}",
     "trackerCommandUsage": "{prefix}tracker <info|add>",
     "trackerAddUsage": "{prefix}tracker add <tracker name> <steamId|playerId>",
-    "trackerInfoUsage": "{prefix}tracker info <tracker name>",
+    "trackerInfoUsage": "{prefix}tracker info <tracker name|id>",
     "trackerServerUnavailable": "Tracker commands require an active server connection.",
     "trackerBattlemetricsMissing": "The active server is missing a Battlemetrics ID.",
     "trackerCreated": "Created tracker {tracker}.",
