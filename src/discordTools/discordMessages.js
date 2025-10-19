@@ -81,7 +81,9 @@ module.exports = {
     sendPassthroughMessage: async function (guildId, serverId, interaction = null) {
         const instance = Client.client.getInstance(guildId);
 
-        if (!instance.channelId.passthrough) return;
+        const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+
+        if (!teamsChannelId) return;
         if (!instance.serverList.hasOwnProperty(serverId)) return;
 
         const server = instance.serverList[serverId];
@@ -92,7 +94,7 @@ module.exports = {
 
         const message = await module.exports.sendMessage(guildId, content,
             server.hasOwnProperty('passthroughMessageId') ? server.passthroughMessageId : null,
-            instance.channelId.passthrough, interaction);
+            teamsChannelId, interaction);
 
         if (!interaction && message) {
             instance.serverList[serverId].passthroughMessageId = message.id;

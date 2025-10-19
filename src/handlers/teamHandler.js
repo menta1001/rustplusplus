@@ -137,7 +137,9 @@ module.exports = {
         const instance = client.getInstance(rustplus.guildId);
         const serverId = rustplus.serverId;
 
-        if (!instance.channelId.passthrough) return;
+        const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+
+        if (!teamsChannelId) return;
         if (!instance.serverList.hasOwnProperty(serverId)) return;
         if (!instance.serverListLite.hasOwnProperty(serverId)) return;
 

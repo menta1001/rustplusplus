@@ -25,8 +25,13 @@ module.exports = async (client, guild) => {
     const instance = client.getInstance(guild.id);
 
     await DiscordTools.clearTextChannel(guild.id, instance.channelId.servers, 100);
-    if (instance.channelId.passthrough !== null) {
-        await DiscordTools.clearTextChannel(guild.id, instance.channelId.passthrough, 100);
+
+    const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+    if (teamsChannelId !== null && teamsChannelId !== undefined) {
+        await DiscordTools.clearTextChannel(guild.id, teamsChannelId, 100);
+        if (instance.channelId.teams !== teamsChannelId) {
+            instance.channelId.teams = teamsChannelId;
+        }
     }
 
     for (const serverId in instance.serverList) {
