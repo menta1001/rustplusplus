@@ -20,6 +20,7 @@
 
 const Builder = require('@discordjs/builders');
 const Discord = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const Path = require('path');
 
 const Constants = require('../util/constants.js');
@@ -54,7 +55,7 @@ module.exports = {
 		client.logInteraction(interaction, verifyId, 'slashCommand');
 
 		if (!await client.validatePermissions(interaction)) return;
-		await interaction.deferReply({ ephemeral: true });
+                await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
 		if (!rustplus || (rustplus && !rustplus.isOperational)) {
 			const str = client.intlGet(interaction.guildId, 'notConnectedToRustServer');

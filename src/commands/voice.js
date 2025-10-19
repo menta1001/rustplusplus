@@ -20,6 +20,7 @@
 */
 
 const Builder = require('@discordjs/builders');
+const { MessageFlags } = require('discord.js');
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 
 const DiscordMessages = require('../discordTools/discordMessages.js');
@@ -45,7 +46,7 @@ module.exports = {
         client.logInteraction(interaction, verifyId, 'slashCommand');
 
         if (!await client.validatePermissions(interaction)) return;
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         switch (interaction.options.getSubcommand()) {
             case 'join': {
