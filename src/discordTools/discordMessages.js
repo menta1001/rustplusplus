@@ -78,6 +78,28 @@ module.exports = {
         }
     },
 
+    sendPassthroughMessage: async function (guildId, serverId, interaction = null) {
+        const instance = Client.client.getInstance(guildId);
+
+        if (!instance.channelId.passthrough) return;
+        if (!instance.serverList.hasOwnProperty(serverId)) return;
+
+        const server = instance.serverList[serverId];
+
+        const content = {
+            embeds: [DiscordEmbeds.getPassthroughEmbed(guildId, serverId)]
+        };
+
+        const message = await module.exports.sendMessage(guildId, content,
+            server.hasOwnProperty('passthroughMessageId') ? server.passthroughMessageId : null,
+            instance.channelId.passthrough, interaction);
+
+        if (!interaction && message) {
+            instance.serverList[serverId].passthroughMessageId = message.id;
+            Client.client.setInstance(guildId, instance);
+        }
+    },
+
     sendTrackerMessage: async function (guildId, trackerId, interaction = null) {
         const instance = Client.client.getInstance(guildId);
         const tracker = instance.trackers[trackerId];

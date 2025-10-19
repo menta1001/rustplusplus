@@ -250,6 +250,7 @@ async function pairingServer(client, guild, title, message, body) {
         markers: server ? server.markers : {},
         switchGroups: server ? server.switchGroups : {},
         messageId: (messageObj !== undefined) ? messageObj.id : null,
+        passthroughMessageId: server ? server.passthroughMessageId : null,
         battlemetricsId: battlemetricsId,
         connect: (!bmInstance.lastUpdateSuccessful) ? null :
             `connect ${bmInstance.server_ip}:${bmInstance.server_port}`,
@@ -275,6 +276,7 @@ async function pairingServer(client, guild, title, message, body) {
     client.updateServerConnectionCheckTimer(guild.id, serverId);
 
     await DiscordMessages.sendServerMessage(guild.id, serverId, null);
+    await DiscordMessages.sendPassthroughMessage(guild.id, serverId);
 }
 
 async function pairingEntitySwitch(client, guild, title, message, body) {
