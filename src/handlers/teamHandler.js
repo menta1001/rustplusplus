@@ -25,6 +25,7 @@ module.exports = {
     handler: async function (rustplus, client, teamInfo) {
         /* Handle team changes */
         await module.exports.checkChanges(rustplus, client, teamInfo);
+        await module.exports.updatePassthroughList(rustplus, client);
     },
 
     checkChanges: async function (rustplus, client, teamInfo) {
@@ -131,4 +132,55 @@ module.exports = {
             }
         }
     },
-}
+
+    updatePassthroughList: async function (rustplus, client) {
+        const instance = client.getInstance(rustplus.guildId);
+        const serverId = rustplus.serverId;
+
+        if (!instance.serverList.hasOwnProperty(serverId)) return;
+
+        let hasChanges = false;
+
+        if (!instance.hasOwnProperty('teamRosterHistory')) {
+            instance.teamRosterHistory = {};
+            hasChanges = true;
+        }
+
+        if (!instance.teamRosterHistory.hasOwnProperty(serverId)) {
+            instance.teamRosterHistory[serverId] = {};
+            hasChanges = true;
+        }
+
+        const roster = instance.teamRosterHistory[serverId];
+
+        for (const player of rustplus.team.players) {
+            const steamId = player.steamId.toString();
+            const storedPlayer = roster[steamId];
+            const playerName = player.name ?? '';
+            const sanitizedName = playerName.trim() !== '' ? playerName : (storedPlayer ? storedPlayer.name : '');
+
+            if (!storedPlayer) {
+                roster[steamId] = {
+                    steamId: steamId,
+                    name: sanitizedName
+                };
+                hasChanges = true;
+            }
+            else if (storedPlayer.name !== sanitizedName) {
+                roster[steamId].name = sanitizedName;
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges) {
+            instance.teamRosterHistory[serverId] = roster;
+            client.setInstance(rustplus.guildId, instance);
+        }
+
+        const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+
+        if (!teamsChannelId) return;
+
+        await DiscordMessages.sendPassthroughMessage(rustplus.guildId, serverId);
+    }
+};

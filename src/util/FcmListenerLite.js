@@ -165,6 +165,9 @@ async function pairingServer(client, guild, steamId, title, message, body) {
 
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
 
+    if (!instance.hasOwnProperty('teamRosterHistory')) instance.teamRosterHistory = {};
+    if (!instance.teamRosterHistory.hasOwnProperty(serverId)) instance.teamRosterHistory[serverId] = {};
+
     instance.serverListLite[serverId][steamId] = {
         serverIp: body.ip,
         appPort: body.port,
@@ -177,6 +180,8 @@ async function pairingServer(client, guild, steamId, title, message, body) {
     if (rustplus && (rustplus.serverId === serverId) && rustplus.team.leaderSteamId === steamId) {
         rustplus.updateLeaderRustPlusLiteInstance();
     }
+
+    await DiscordMessages.sendPassthroughMessage(guild.id, serverId);
 }
 
 async function pairingEntitySwitch(client, guild, title, message, body) {

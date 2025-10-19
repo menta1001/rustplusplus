@@ -121,6 +121,88 @@ module.exports = {
         });
     },
 
+    getPassthroughEmbed: function (guildId, serverId) {
+        const instance = Client.client.getInstance(guildId);
+        const server = instance.serverList[serverId];
+        const roster = instance.hasOwnProperty('teamRosterHistory') &&
+            instance.teamRosterHistory.hasOwnProperty(serverId) ?
+            instance.teamRosterHistory[serverId] : {};
+        const rustplus = Client.client.rustplusInstances[guildId];
+        const hasActiveTeam = rustplus && rustplus.serverId === serverId && rustplus.team;
+
+        const players = [];
+        const unknown = Client.client.intlGet(guildId, 'unknown');
+
+        for (const [steamId, data] of Object.entries(roster)) {
+            const storedName = data && typeof data === 'object' && data.hasOwnProperty('name') ? data.name : null;
+            let name = storedName ? storedName : unknown;
+            let inTeam = false;
+            let isOnline = false;
+
+            if (hasActiveTeam) {
+                const player = rustplus.team.getPlayer(steamId);
+                if (player) {
+                    inTeam = true;
+                    isOnline = player.isOnline;
+                    name = player.name === '' ? unknown : player.name;
+                }
+            }
+
+            players.push({
+                steamId: steamId,
+                name: name,
+                inTeam: inTeam,
+                isOnline: isOnline
+            });
+        }
+
+        players.sort((a, b) => a.name.localeCompare(b.name));
+
+        const activePlayers = [];
+        const inactivePlayers = [];
+        const noneValue = Client.client.intlGet(guildId, 'passthroughNone');
+
+        for (const player of players) {
+            const nameLink = `[${player.name}](${Constants.STEAM_PROFILES_URL}${player.steamId})`;
+            const steamIdString = `\`${player.steamId}\``;
+
+            if (player.inTeam) {
+                const statusEmoji = player.isOnline ? Constants.ONLINE_EMOJI : Constants.OFFLINE_EMOJI;
+                activePlayers.push(`${statusEmoji} ${nameLink}\n${steamIdString}`);
+            }
+            else {
+                inactivePlayers.push(`${Constants.NOT_FOUND_EMOJI} ${nameLink}\n${steamIdString}`);
+            }
+        }
+
+        if (players.length === 0) {
+            activePlayers.push(noneValue);
+            inactivePlayers.push(noneValue);
+        }
+        else {
+            if (activePlayers.length === 0) activePlayers.push(noneValue);
+            if (inactivePlayers.length === 0) inactivePlayers.push(noneValue);
+        }
+
+        return module.exports.getEmbed({
+            title: Client.client.intlGet(guildId, 'passthroughListTitle', { server: server.title }),
+            color: Constants.COLOR_DEFAULT,
+            fields: [
+                {
+                    name: Client.client.intlGet(guildId, 'passthroughActive'),
+                    value: activePlayers.join('\n'),
+                    inline: false
+                },
+                {
+                    name: Client.client.intlGet(guildId, 'passthroughInactive'),
+                    value: inactivePlayers.join('\n'),
+                    inline: false
+                }
+            ],
+            timestamp: true
+        });
+    },
+
     getTrackerEmbed: function (guildId, trackerId) {
         const instance = Client.client.getInstance(guildId);
         const tracker = instance.trackers[trackerId];
