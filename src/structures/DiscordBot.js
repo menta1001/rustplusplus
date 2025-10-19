@@ -626,6 +626,10 @@ class DiscordBot extends Discord.Client {
 
     async interactionUpdate(interaction, content) {
         try {
+            if (interaction.deferred || interaction.replied) {
+                return await interaction.editReply(content);
+            }
+
             return await interaction.update(content);
         }
         catch (e) {
