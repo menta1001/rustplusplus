@@ -177,6 +177,8 @@ async function pairingServer(client, guild, steamId, title, message, body) {
     if (rustplus && (rustplus.serverId === serverId) && rustplus.team.leaderSteamId === steamId) {
         rustplus.updateLeaderRustPlusLiteInstance();
     }
+
+    await DiscordMessages.sendPassthroughMessage(guild.id, serverId);
 }
 
 async function pairingEntitySwitch(client, guild, title, message, body) {

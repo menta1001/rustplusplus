@@ -35,6 +35,7 @@ module.exports = (client, guild) => {
                 category: null,
                 information: null,
                 servers: null,
+                teams: null,
                 settings: null,
                 commands: null,
                 events: null,
@@ -119,6 +120,7 @@ module.exports = (client, guild) => {
                 category: null,
                 information: null,
                 servers: null,
+                teams: null,
                 settings: null,
                 commands: null,
                 events: null,
@@ -135,6 +137,13 @@ module.exports = (client, guild) => {
             if (!instance.channelId.hasOwnProperty('category')) instance.channelId.category = null;
             if (!instance.channelId.hasOwnProperty('information')) instance.channelId.information = null;
             if (!instance.channelId.hasOwnProperty('servers')) instance.channelId.servers = null;
+            if (instance.channelId.hasOwnProperty('passthrough')) {
+                if (!instance.channelId.hasOwnProperty('teams') || instance.channelId.teams === null) {
+                    instance.channelId.teams = instance.channelId.passthrough;
+                }
+                delete instance.channelId.passthrough;
+            }
+            if (!instance.channelId.hasOwnProperty('teams')) instance.channelId.teams = null;
             if (!instance.channelId.hasOwnProperty('settings')) instance.channelId.settings = null;
             if (!instance.channelId.hasOwnProperty('commands')) instance.channelId.commands = null;
             if (!instance.channelId.hasOwnProperty('events')) instance.channelId.events = null;
