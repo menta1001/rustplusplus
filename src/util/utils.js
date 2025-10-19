@@ -116,6 +116,15 @@ module.exports = {
 
         return minDistance > numericThreshold ? null : closestString;
     },
+
+    wildcardToRegExp: function (pattern) {
+        const input = coerceToString(pattern);
+        if (input === '') return /^$/i;
+
+        const escaped = input.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+        const regexString = `^${escaped.replace(/\*/g, '.*').replace(/\?/g, '.')}$`;
+        return new RegExp(regexString, 'i');
+    },
 }
 
 /* Function to calculate Levenshtein distance between two strings */

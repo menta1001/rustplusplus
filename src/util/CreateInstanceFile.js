@@ -39,6 +39,7 @@ module.exports = (client, guild) => {
                 settings: null,
                 commands: null,
                 events: null,
+                market: null,
                 teamchat: null,
                 switches: null,
                 switchGroups: null,
@@ -124,6 +125,7 @@ module.exports = (client, guild) => {
                 settings: null,
                 commands: null,
                 events: null,
+                market: null,
                 teamchat: null,
                 switches: null,
                 switchGroups: null,
@@ -147,6 +149,7 @@ module.exports = (client, guild) => {
             if (!instance.channelId.hasOwnProperty('settings')) instance.channelId.settings = null;
             if (!instance.channelId.hasOwnProperty('commands')) instance.channelId.commands = null;
             if (!instance.channelId.hasOwnProperty('events')) instance.channelId.events = null;
+            if (!instance.channelId.hasOwnProperty('market')) instance.channelId.market = null;
             if (!instance.channelId.hasOwnProperty('teamchat')) instance.channelId.teamchat = null;
             if (!instance.channelId.hasOwnProperty('switches')) instance.channelId.switches = null;
             if (!instance.channelId.hasOwnProperty('switchGroups')) instance.channelId.switchGroups = null;
@@ -218,6 +221,7 @@ module.exports = (client, guild) => {
             delete content.passthroughMessageId;
         }
         if (!content.hasOwnProperty('teamsMessageId')) content.teamsMessageId = null;
+        if (!content.hasOwnProperty('marketMessageId')) content.marketMessageId = null;
         if (!content.hasOwnProperty('customCameraGroups')) content.customCameraGroups = {};
         if (!content.hasOwnProperty('connectionCheckIntervalMinutes')) content.connectionCheckIntervalMinutes = 0;
     }

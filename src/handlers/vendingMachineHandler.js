@@ -116,6 +116,8 @@ module.exports = {
             }
         }
 
+        await DiscordMessages.sendMarketListingsMessage(rustplus.guildId, rustplus.serverId);
+
         rustplus.firstPollItems = { all: [], buy: [], sell: [] };
     },
 }

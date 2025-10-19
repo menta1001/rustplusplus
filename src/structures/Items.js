@@ -66,6 +66,20 @@ class Items {
         }
         return null;
     }
+
+    getItemIdsByWildcard(pattern) {
+        if (typeof pattern !== 'string' || pattern.trim() === '') return [];
+
+        const regex = Utils.wildcardToRegExp(pattern.trim());
+        const matches = [];
+
+        for (const [id, item] of Object.entries(this.items)) {
+            if (!item || typeof item.name !== 'string') continue;
+            if (regex.test(item.name)) matches.push(id);
+        }
+
+        return matches;
+    }
 }
 
 module.exports = Items;
