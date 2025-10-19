@@ -1247,6 +1247,7 @@ module.exports = {
             { name: '/map', descriptionKey: 'commandsMapDesc', exampleKey: 'commandsHelpDiscordMapExample' },
             { name: '/market', descriptionKey: 'commandsMarketDesc', exampleKey: 'commandsHelpDiscordMarketExample' },
             { name: '/players', descriptionKey: 'commandsPlayersDesc', exampleKey: 'commandsHelpDiscordPlayersExample' },
+            { name: '/tracker', descriptionKey: 'commandsTrackerDesc', exampleKey: 'commandsHelpDiscordTrackerExample' },
             { name: '/recycle', descriptionKey: 'commandsRecycleDesc', exampleKey: 'commandsHelpDiscordRecycleExample' },
             { name: '/research', descriptionKey: 'commandsResearchDesc', exampleKey: 'commandsHelpDiscordResearchExample' },
             { name: '/reset', descriptionKey: 'commandsResetDesc', exampleKey: 'commandsHelpDiscordResetExample' },

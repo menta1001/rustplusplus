@@ -14,6 +14,7 @@
 - **/map** - Display the In-Game Map.
 - **/market** - Search for or subscribe to items in vending machines.
 - **/players** - Get Battlemetrics data on all connected players.
+- **/tracker** - Display tracked player information using configured trackers.
 - **/recycle** - Display the output of recycling an item.
 - **/research** - Display the cost to research an item.
 - **/reset** - Reset Discord Channels.
