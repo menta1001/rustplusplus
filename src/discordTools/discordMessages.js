@@ -545,7 +545,7 @@ module.exports = {
 
     sendHelpMessage: async function (interaction) {
         const content = {
-            embeds: [DiscordEmbeds.getHelpEmbed(interaction.guildId)],
+            embeds: DiscordEmbeds.getHelpEmbeds(interaction.guildId),
             components: DiscordButtons.getHelpButtons(),
             ephemeral: true
         }
