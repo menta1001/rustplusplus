@@ -2149,7 +2149,10 @@ class RustPlus extends RustPlusLib {
         const commandTracker = `${prefix}${Client.client.intlGet(this.guildId, 'commandSyntaxTracker')}`;
         const commandTrackerEn = `${prefix}${Client.client.intlGet('en', 'commandSyntaxTracker')}`;
         const commandLower = command.toLowerCase();
-        const usage = Client.client.intlGet(this.guildId, 'trackerCommandUsage', { prefix: prefix });
+        const usage = Client.client.intlGet(this.guildId, 'trackerCommandUsage', {
+            prefix: prefix,
+            trackerOptions: '<info|add>'
+        });
 
         let commandBody = null;
         if (commandLower === commandTracker.toLowerCase() || commandLower === commandTrackerEn.toLowerCase()) {
