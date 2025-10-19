@@ -885,7 +885,7 @@
     "tracker": "Tracker",
     "trackerAddPlayerDesc": "Add Player to {tracker}",
     "trackerRemovePlayerDesc": "Remove Player from {tracker}",
-    "trackerCommandUsage": "{prefix}tracker <info|add>",
+    "trackerCommandUsage": "{prefix}tracker {trackerOptions}",
     "trackerAddUsage": "{prefix}tracker add <tracker name> <steamId|playerId>",
     "trackerInfoUsage": "{prefix}tracker info <tracker name|id>",
     "trackerServerUnavailable": "Tracker commands require an active server connection.",
