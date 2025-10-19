@@ -1134,7 +1134,7 @@ module.exports = {
         });
     },
 
-    getHelpEmbed: function (guildId) {
+    getHelpEmbeds: function (guildId) {
         const repository = 'https://github.com/alexemanuelol/rustplusplus';
         const credentials = `${repository}/blob/master/docs/credentials.md`;
         const pairServer = `${repository}/blob/master/docs/pair_and_connect_to_server.md`;
@@ -1145,12 +1145,271 @@ module.exports = {
             `→ [${Client.client.intlGet(guildId, 'commandsHelpHowToPairServer')}](${pairServer})\n` +
             `→ [${Client.client.intlGet(guildId, 'commandsHelpCommandList')}](${commands})`;
 
-        return module.exports.getEmbed({
+        const embedList = [];
+        embedList.push(module.exports.getEmbed({
             color: Constants.COLOR_DEFAULT,
             timestamp: true,
-            title: `rustplusplus Help`,
+            title: Client.client.intlGet(guildId, 'commandsHelpTitle'),
             description: description
-        });
+        }));
+
+        const exampleLabel = example =>
+            Client.client.intlGet(guildId, 'commandsHelpExample', { example: example });
+
+        const slashCommands = [
+            { name: '/alarm', descriptionKey: 'commandsAlarmDesc', exampleKey: 'commandsHelpDiscordAlarmExample' },
+            { name: '/alias', descriptionKey: 'commandsAliasDesc', exampleKey: 'commandsHelpDiscordAliasExample' },
+            { name: '/blacklist', descriptionKey: 'commandsBlacklistDesc', exampleKey: 'commandsHelpDiscordBlacklistExample' },
+            { name: '/cctv', descriptionKey: 'commandsCctvDesc', exampleKey: 'commandsHelpDiscordCctvExample' },
+            { name: '/craft', descriptionKey: 'commandsCraftDesc', exampleKey: 'commandsHelpDiscordCraftExample' },
+            { name: '/credentials', descriptionKey: 'commandsCredentialsDesc', exampleKey: 'commandsHelpDiscordCredentialsExample' },
+            { name: '/decay', descriptionKey: 'commandsDecayDesc', exampleKey: 'commandsHelpDiscordDecayExample' },
+            { name: '/despawn', descriptionKey: 'commandsDespawnDesc', exampleKey: 'commandsHelpDiscordDespawnExample' },
+            { name: '/help', descriptionKey: 'commandsHelpDesc', exampleKey: 'commandsHelpDiscordHelpExample' },
+            { name: '/item', descriptionKey: 'commandsItemDesc', exampleKey: 'commandsHelpDiscordItemExample' },
+            { name: '/leader', descriptionKey: 'commandsLeaderDesc', exampleKey: 'commandsHelpDiscordLeaderExample' },
+            { name: '/map', descriptionKey: 'commandsMapDesc', exampleKey: 'commandsHelpDiscordMapExample' },
+            { name: '/market', descriptionKey: 'commandsMarketDesc', exampleKey: 'commandsHelpDiscordMarketExample' },
+            { name: '/players', descriptionKey: 'commandsPlayersDesc', exampleKey: 'commandsHelpDiscordPlayersExample' },
+            { name: '/recycle', descriptionKey: 'commandsRecycleDesc', exampleKey: 'commandsHelpDiscordRecycleExample' },
+            { name: '/research', descriptionKey: 'commandsResearchDesc', exampleKey: 'commandsHelpDiscordResearchExample' },
+            { name: '/reset', descriptionKey: 'commandsResetDesc', exampleKey: 'commandsHelpDiscordResetExample' },
+            { name: '/role', descriptionKey: 'commandsRoleDesc', exampleKey: 'commandsHelpDiscordRoleExample' },
+            { name: '/stack', descriptionKey: 'commandsStackDesc', exampleKey: 'commandsHelpDiscordStackExample' },
+            { name: '/storagemonitor', descriptionKey: 'commandsStoragemonitorDesc', exampleKey: 'commandsHelpDiscordStorageMonitorExample' },
+            { name: '/switch', descriptionKey: 'commandsSwitchDesc', exampleKey: 'commandsHelpDiscordSwitchExample' },
+            { name: '/upkeep', descriptionKey: 'commandsUpkeepDesc', exampleKey: 'commandsHelpDiscordUpkeepExample' },
+            { name: '/uptime', descriptionKey: 'commandsUptimeDesc', exampleKey: 'commandsHelpDiscordUptimeExample' },
+            { name: '/voice', descriptionKey: 'commandsVoiceDesc', exampleKey: 'commandsHelpDiscordVoiceExample' }
+        ];
+
+        const slashFields = slashCommands.map(command => ({
+            name: command.name,
+            value: `${Client.client.intlGet(guildId, command.descriptionKey)}\n${exampleLabel(Client.client.intlGet(guildId, command.exampleKey))}`,
+            inline: false
+        }));
+
+        embedList.push(module.exports.getEmbed({
+            color: Constants.COLOR_DEFAULT,
+            title: Client.client.intlGet(guildId, 'commandsHelpDiscordTitle'),
+            description: Client.client.intlGet(guildId, 'commandsHelpDiscordDescription'),
+            fields: slashFields
+        }));
+
+        const instance = Client.client.getInstance(guildId);
+        const prefix = instance?.generalSettings?.prefix ? instance.generalSettings.prefix : '!';
+
+        const inGameCommands = [
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxAfk')}`,
+                descriptionKey: 'commandsHelpInGameAfkDescription',
+                exampleKey: 'commandsHelpInGameAfkExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxAlive')}`,
+                descriptionKey: 'commandsHelpInGameAliveDescription',
+                exampleKey: 'commandsHelpInGameAliveExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxCargo')}`,
+                descriptionKey: 'commandsHelpInGameCargoDescription',
+                exampleKey: 'commandsHelpInGameCargoExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxChinook')}`,
+                descriptionKey: 'commandsHelpInGameChinookDescription',
+                exampleKey: 'commandsHelpInGameChinookExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxConnection')} / ${prefix}${Client.client.intlGet(guildId, 'commandSyntaxConnections')}`,
+                descriptionKey: 'commandsHelpInGameConnectionsDescription',
+                exampleKey: 'commandsHelpInGameConnectionsExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxCraft')}`,
+                descriptionKey: 'commandsHelpInGameCraftDescription',
+                exampleKey: 'commandsHelpInGameCraftExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxDeath')} / ${prefix}${Client.client.intlGet(guildId, 'commandSyntaxDeaths')}`,
+                descriptionKey: 'commandsHelpInGameDeathsDescription',
+                exampleKey: 'commandsHelpInGameDeathsExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxDecay')}`,
+                descriptionKey: 'commandsHelpInGameDecayDescription',
+                exampleKey: 'commandsHelpInGameDecayExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxEvents')}`,
+                descriptionKey: 'commandsHelpInGameEventsDescription',
+                exampleKey: 'commandsHelpInGameEventsExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxHeli')}`,
+                descriptionKey: 'commandsHelpInGameHeliDescription',
+                exampleKey: 'commandsHelpInGameHeliExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxLarge')}`,
+                descriptionKey: 'commandsHelpInGameLargeDescription',
+                exampleKey: 'commandsHelpInGameLargeExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxLeader')}`,
+                descriptionKey: 'commandsHelpInGameLeaderDescription',
+                exampleKey: 'commandsHelpInGameLeaderExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxMarker')} / ${prefix}${Client.client.intlGet(guildId, 'commandSyntaxMarkers')}`,
+                descriptionKey: 'commandsHelpInGameMarkerDescription',
+                exampleKey: 'commandsHelpInGameMarkerExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxMarket')}`,
+                descriptionKey: 'commandsHelpInGameMarketDescription',
+                exampleKey: 'commandsHelpInGameMarketExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxMute')}`,
+                descriptionKey: 'commandsHelpInGameMuteDescription',
+                exampleKey: 'commandsHelpInGameMuteExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxNote')} / ${prefix}${Client.client.intlGet(guildId, 'commandSyntaxNotes')}`,
+                descriptionKey: 'commandsHelpInGameNotesDescription',
+                exampleKey: 'commandsHelpInGameNotesExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxOffline')}`,
+                descriptionKey: 'commandsHelpInGameOfflineDescription',
+                exampleKey: 'commandsHelpInGameOfflineExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxOnline')}`,
+                descriptionKey: 'commandsHelpInGameOnlineDescription',
+                exampleKey: 'commandsHelpInGameOnlineExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxPlayer')} / ${prefix}${Client.client.intlGet(guildId, 'commandSyntaxPlayers')}`,
+                descriptionKey: 'commandsHelpInGamePlayersDescription',
+                exampleKey: 'commandsHelpInGamePlayersExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxPop')}`,
+                descriptionKey: 'commandsHelpInGamePopDescription',
+                exampleKey: 'commandsHelpInGamePopExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxProx')}`,
+                descriptionKey: 'commandsHelpInGameProxDescription',
+                exampleKey: 'commandsHelpInGameProxExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxRecycle')}`,
+                descriptionKey: 'commandsHelpInGameRecycleDescription',
+                exampleKey: 'commandsHelpInGameRecycleExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxResearch')}`,
+                descriptionKey: 'commandsHelpInGameResearchDescription',
+                exampleKey: 'commandsHelpInGameResearchExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxSend')}`,
+                descriptionKey: 'commandsHelpInGameSendDescription',
+                exampleKey: 'commandsHelpInGameSendExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxSmall')}`,
+                descriptionKey: 'commandsHelpInGameSmallDescription',
+                exampleKey: 'commandsHelpInGameSmallExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxSteamid')}`,
+                descriptionKey: 'commandsHelpInGameSteamIdDescription',
+                exampleKey: 'commandsHelpInGameSteamIdExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTeam')}`,
+                descriptionKey: 'commandsHelpInGameTeamDescription',
+                exampleKey: 'commandsHelpInGameTeamExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTime')}`,
+                descriptionKey: 'commandsHelpInGameTimeDescription',
+                exampleKey: 'commandsHelpInGameTimeExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTimer')} / ${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTimers')}`,
+                descriptionKey: 'commandsHelpInGameTimerDescription',
+                exampleKey: 'commandsHelpInGameTimerExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTranslateTo')}`,
+                descriptionKey: 'commandsHelpInGameTranslateDescription',
+                exampleKey: 'commandsHelpInGameTranslateExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTranslateFromTo')}`,
+                descriptionKey: 'commandsHelpInGameTranslateFromDescription',
+                exampleKey: 'commandsHelpInGameTranslateFromExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTTS')}`,
+                descriptionKey: 'commandsHelpInGameTtsDescription',
+                exampleKey: 'commandsHelpInGameTtsExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxUnmute')}`,
+                descriptionKey: 'commandsHelpInGameUnmuteDescription',
+                exampleKey: 'commandsHelpInGameUnmuteExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxUpkeep')}`,
+                descriptionKey: 'commandsHelpInGameUpkeepDescription',
+                exampleKey: 'commandsHelpInGameUpkeepExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxUptime')}`,
+                descriptionKey: 'commandsHelpInGameUptimeDescription',
+                exampleKey: 'commandsHelpInGameUptimeExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxTravelingVendor')}`,
+                descriptionKey: 'commandsHelpInGameVendorDescription',
+                exampleKey: 'commandsHelpInGameVendorExample'
+            },
+            {
+                name: `${prefix}${Client.client.intlGet(guildId, 'commandSyntaxWipe')}`,
+                descriptionKey: 'commandsHelpInGameWipeDescription',
+                exampleKey: 'commandsHelpInGameWipeExample'
+            }
+        ];
+
+        const inGameFields = inGameCommands.map(command => ({
+            name: command.name,
+            value: `${Client.client.intlGet(guildId, command.descriptionKey)}\n${exampleLabel(Client.client.intlGet(guildId, command.exampleKey, { prefix: prefix }))}`,
+            inline: false
+        }));
+
+        const chunkSize = 20;
+        for (let index = 0; index < inGameFields.length; index += chunkSize) {
+            const fields = inGameFields.slice(index, index + chunkSize);
+            const page = Math.floor(index / chunkSize) + 1;
+            const totalPages = Math.ceil(inGameFields.length / chunkSize);
+            const options = {
+                color: Constants.COLOR_DEFAULT,
+                title: `${Client.client.intlGet(guildId, 'commandsHelpInGameTitle')} (${page}/${totalPages})`,
+                fields: fields
+            };
+            if (page === 1) {
+                options.description = Client.client.intlGet(guildId, 'commandsHelpInGameDescription', { prefix: prefix });
+            }
+            embedList.push(module.exports.getEmbed(options));
+        }
+
+        return embedList;
     },
 
     getCctvEmbed: function (guildId, monument, cctvCodes, dynamic) {
