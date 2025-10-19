@@ -211,6 +211,13 @@ module.exports = (client, guild) => {
 
     /* Check every serverList for missing keys */
     for (const [serverId, content] of Object.entries(instance.serverList)) {
+        if (content.hasOwnProperty('passthroughMessageId')) {
+            if (!content.hasOwnProperty('teamsMessageId') || content.teamsMessageId === null) {
+                content.teamsMessageId = content.passthroughMessageId;
+            }
+            delete content.passthroughMessageId;
+        }
+        if (!content.hasOwnProperty('teamsMessageId')) content.teamsMessageId = null;
         if (!content.hasOwnProperty('customCameraGroups')) content.customCameraGroups = {};
         if (!content.hasOwnProperty('connectionCheckIntervalMinutes')) content.connectionCheckIntervalMinutes = 0;
     }
