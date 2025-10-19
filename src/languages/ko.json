@@ -89,6 +89,7 @@
     "channelNameEvents": "이벤트",
     "channelNameInformation": "정보",
     "channelNameServers": "서버",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "설정",
     "channelNameStorageMonitors": "보관 측정장치",
     "channelNameSwitchGroups": "스위치-그룹",
@@ -700,6 +701,10 @@
     "switches": "스위치",
     "teamMember": "팀 맴버",
     "teamMemberInfo": "팀 맴버 정보",
+    "passthroughListTitle": "Paired Players - {server}",
+    "passthroughActive": "Active",
+    "passthroughInactive": "Inactive",
+    "passthroughNone": "No passthrough players found.",
     "theDome": "돔",
     "theIdOfTheItem": "The id of the item.",
     "theNameOfTheItem": "The name of the item.",
@@ -814,10 +819,5 @@
     "bradleyRespawned": "Bradley APC should now be active.",
     "bradleyNoData": "No Bradley APC activity recorded yet.",
     "bradleyApcDestroyedSetting": "When Bradley APC is destroyed, send a notification.",
-    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification.",
-    "channelNameTeams": "teams",
-    "teamsListTitle": "Paired Players - {server}",
-    "teamsActive": "Active",
-    "teamsInactive": "Inactive",
-    "teamsNone": "No paired players found."
+    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification."
 }

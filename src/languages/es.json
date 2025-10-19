@@ -101,6 +101,7 @@
     "channelNameEvents": "eventos",
     "channelNameInformation": "información",
     "channelNameServers": "servidores",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "configuración",
     "channelNameStorageMonitors": "monitores-de-almacenamiento",
     "channelNameSwitchGroups": "grupos-de-interruptores",
@@ -714,6 +715,10 @@
     "switches": "Interruptores",
     "teamMember": "Miembro del Equipo",
     "teamMemberInfo": "Información del miembro del grupo",
+    "passthroughListTitle": "Paired Players - {server}",
+    "passthroughActive": "Active",
+    "passthroughInactive": "Inactive",
+    "passthroughNone": "No passthrough players found.",
     "theDome": "La Cúpula",
     "theIdOfTheItem": "The id of the item.",
     "theNameOfTheItem": "The name of the item.",
@@ -814,10 +819,5 @@
     "wipeDetected": "¡Wipe detectado!",
     "yield": "Yield",
     "youAreAlreadyLeader": "Ya eres líder.",
-    "youAreNotPairedWithServer": "El comando líder no funciona porque no está emparejado con el servidor.",
-    "channelNameTeams": "teams",
-    "teamsListTitle": "Paired Players - {server}",
-    "teamsActive": "Active",
-    "teamsInactive": "Inactive",
-    "teamsNone": "No paired players found."
+    "youAreNotPairedWithServer": "El comando líder no funciona porque no está emparejado con el servidor."
 }

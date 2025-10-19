@@ -89,6 +89,7 @@
     "channelNameEvents": "eventos",
     "channelNameInformation": "informação",
     "channelNameServers": "servidores",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "definições",
     "channelNameStorageMonitors": "monitoresArmazenamento",
     "channelNameSwitchGroups": "gruposInterruptores",
@@ -700,6 +701,10 @@
     "switches": "Interruptores",
     "teamMember": "Membro da Equipa",
     "teamMemberInfo": "Informação do Membro da Equipa",
+    "passthroughListTitle": "Paired Players - {server}",
+    "passthroughActive": "Active",
+    "passthroughInactive": "Inactive",
+    "passthroughNone": "No passthrough players found.",
     "theDome": "A Cúpula",
     "theIdOfTheItem": "O ID do item.",
     "theNameOfTheItem": "O nome do item.",
@@ -814,10 +819,5 @@
     "bradleyRespawned": "Bradley APC should now be active.",
     "bradleyNoData": "No Bradley APC activity recorded yet.",
     "bradleyApcDestroyedSetting": "When Bradley APC is destroyed, send a notification.",
-    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification.",
-    "channelNameTeams": "teams",
-    "teamsListTitle": "Paired Players - {server}",
-    "teamsActive": "Active",
-    "teamsInactive": "Inactive",
-    "teamsNone": "No paired players found."
+    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification."
 }
