@@ -100,7 +100,8 @@ class RustPlus extends RustPlusLib {
             heli: [],
             small: [],
             large: [],
-            chinook: []
+            chinook: [],
+            bradly: []
         };
         this.patrolHelicopterTracers = new Object();
         this.cargoShipTracers = new Object();
@@ -225,7 +226,9 @@ class RustPlus extends RustPlusLib {
         const commandSmallEn = `${Client.client.intlGet('en', 'commandSyntaxSmall')}`;
         const commandLargeEn = `${Client.client.intlGet('en', 'commandSyntaxLarge')}`;
         const commandChinookEn = `${Client.client.intlGet('en', 'commandSyntaxChinook')}`;
-        if (![commandCargoEn, commandHeliEn, commandSmallEn, commandLargeEn, commandChinookEn].includes(event)) return;
+        const commandBradlyEn = `${Client.client.intlGet('en', 'commandSyntaxBradley')}`;
+        if (![commandCargoEn, commandHeliEn, commandSmallEn, commandLargeEn, commandChinookEn,
+            commandBradlyEn].includes(event)) return;
 
         const str = `${Timer.getCurrentDateTime()} - ${message}`;
 
@@ -1287,9 +1290,12 @@ class RustPlus extends RustPlusLib {
         const commandLargeEn = `${Client.client.intlGet('en', 'commandSyntaxLarge')}`;
         const commandChinook = `${Client.client.intlGet(this.guildId, 'commandSyntaxChinook')}`;
         const commandChinookEn = `${Client.client.intlGet('en', 'commandSyntaxChinook')}`;
+        const commandBradly = `${Client.client.intlGet(this.guildId, 'commandSyntaxBradley')}`;
+        const commandBradlyEn = `${Client.client.intlGet('en', 'commandSyntaxBradley')}`;
 
         const EVENTS = [commandCargo, commandCargoEn, commandHeli, commandHeliEn, commandSmall,
-            commandSmallEn, commandLarge, commandLargeEn, commandChinook, commandChinookEn];
+            commandSmallEn, commandLarge, commandLargeEn, commandChinook, commandChinookEn,
+            commandBradly, commandBradlyEn];
 
         if (command.toLowerCase().startsWith(`${commandEvents}`)) {
             command = command.slice(`${commandEvents}`.length).trim();
@@ -1354,6 +1360,11 @@ class RustPlus extends RustPlusLib {
                 event = 'chinook';
             } break;
 
+            case commandBradlyEn:
+            case commandBradly: {
+                event = 'bradly';
+            } break;
+
             default: {
                 event = 'all';
             } break;
@@ -1372,6 +1383,84 @@ class RustPlus extends RustPlusLib {
         }
 
         return strings;
+    }
+
+    getCommandBradly(isInfoChannel = false) {
+        if (!this.mapMarkers) {
+            return Client.client.intlGet(this.guildId, 'bradleyNoData');
+        }
+
+        const crates = this.mapMarkers.bradleyCrates;
+        const destroyedAt = this.mapMarkers.timeSinceBradleyWasDestroyed;
+        const respawnedAt = this.mapMarkers.timeSinceBradleyRespawned;
+        const location = this.mapMarkers.bradleyDestroyedLocation;
+        const displayLocation = location ? location : Client.client.intlGet(this.guildId, 'unknown');
+        const respawnTimeMs = this.mapMarkers.getBradleyRespawnTimeMs ?
+            this.mapMarkers.getBradleyRespawnTimeMs() : Constants.DEFAULT_BRADLEY_RESPAWN_TIME_MS;
+
+        if (crates.length > 0) {
+            const timeSince = destroyedAt ? (new Date() - destroyedAt) / 1000 : 0;
+            if (isInfoChannel) {
+                return Client.client.intlGet(this.guildId, 'bradleyDownShort', {
+                    time: Timer.secondsToFullScale(timeSince, 's')
+                });
+            }
+
+            return Client.client.intlGet(this.guildId, 'bradleyCratesLocated', {
+                location: displayLocation,
+                time: Timer.secondsToFullScale(timeSince)
+            });
+        }
+
+        if (destroyedAt !== null) {
+            const secondsSince = (new Date() - destroyedAt) / 1000;
+            const timeLeft = (respawnTimeMs / 1000) - secondsSince;
+            if (timeLeft > 0) {
+                if (isInfoChannel) {
+                    return Client.client.intlGet(this.guildId, 'bradleyRespawnShort', {
+                        time: Timer.secondsToFullScale(timeLeft, 's')
+                    });
+                }
+
+                return Client.client.intlGet(this.guildId, 'bradleyRespawnIn', {
+                    time: Timer.secondsToFullScale(timeLeft)
+                });
+            }
+
+            if (respawnedAt !== null) {
+                const activeFor = (new Date() - respawnedAt) / 1000;
+                if (isInfoChannel) {
+                    return Client.client.intlGet(this.guildId, 'bradleyActiveShort', {
+                        time: Timer.secondsToFullScale(activeFor, 's')
+                    });
+                }
+
+                return Client.client.intlGet(this.guildId, 'bradleyActiveFor', {
+                    time: Timer.secondsToFullScale(activeFor)
+                });
+            }
+
+            if (isInfoChannel) {
+                return Client.client.intlGet(this.guildId, 'bradleyRespawnedShort');
+            }
+
+            return Client.client.intlGet(this.guildId, 'bradleyRespawned');
+        }
+
+        if (respawnedAt !== null) {
+            const activeFor = (new Date() - respawnedAt) / 1000;
+            if (isInfoChannel) {
+                return Client.client.intlGet(this.guildId, 'bradleyActiveShort', {
+                    time: Timer.secondsToFullScale(activeFor, 's')
+                });
+            }
+
+            return Client.client.intlGet(this.guildId, 'bradleyActiveFor', {
+                time: Timer.secondsToFullScale(activeFor)
+            });
+        }
+
+        return Client.client.intlGet(this.guildId, 'bradleyNoData');
     }
 
     getCommandHeli(isInfoChannel = false) {
