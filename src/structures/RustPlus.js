@@ -2388,7 +2388,31 @@ class RustPlus extends RustPlusLib {
         if (firstLower === commandInfo || firstLower === commandInfoEn) {
             trackerName = commandBody.slice(parts[0].length).trim();
             if (trackerName === '') {
-                return Client.client.intlGet(this.guildId, 'trackerInfoUsage', { prefix: prefix });
+                const trackers = instance.trackers;
+                if (!trackers || Object.keys(trackers).length === 0) {
+                    return Client.client.intlGet(this.guildId, 'trackerInfoUsage', { prefix: prefix });
+                }
+
+                const trackerEntries = Object.entries(trackers)
+                    .filter(([, tracker]) => tracker.serverId === this.serverId);
+
+                let defaultTrackerId = null;
+                if (trackerEntries.length === 1) {
+                    defaultTrackerId = trackerEntries[0][0];
+                }
+                else {
+                    const trackersWithPlayers = trackerEntries.filter(([, tracker]) =>
+                        Array.isArray(tracker.players) && tracker.players.length > 0);
+                    if (trackersWithPlayers.length === 1) {
+                        defaultTrackerId = trackersWithPlayers[0][0];
+                    }
+                }
+
+                if (!defaultTrackerId) {
+                    return Client.client.intlGet(this.guildId, 'trackerInfoUsage', { prefix: prefix });
+                }
+
+                trackerName = defaultTrackerId;
             }
         }
 
