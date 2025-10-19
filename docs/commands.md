@@ -22,6 +22,7 @@ Slash Command | Description
 [**/map**](commands.md#map) | Get the currently connected server map image.
 [**/market**](commands.md#market) | Operations for In-Game Vending Machines.
 [**/players**](commands.md#players) | Get player/players information based on battlemetrics.
+[**/tracker**](commands.md#tracker) | Display tracked player information using configured trackers.
 [**/recycle**](commands.md#recycle) | Display the output of recycling an item.
 [**/research**](commands.md#research) | Display the cost to research an item.
 [**/reset**](commands.md#reset) | Reset Discord channels.
@@ -224,6 +225,17 @@ Subcommand | Options | Description | Required
 ![Discord Slash Command players specific user Image](images/slash_commands/players_specific_user.png)
 
 
+## **/tracker**
+
+> **Display tracked player information using configured trackers.** This command mirrors the tracker embeds that are posted in the
+> trackers channel and lets you inspect them on demand.
+
+Subcommand | Options | Description | Required
+---------- | ------- | ----------- | --------
+`info` | &nbsp; | Show the tracked players and their status for a tracker. | &nbsp;
+&nbsp; | `tracker` | The tracker name or ID. | `True`
+
+
 ## **/recycle**
 
 > **Display the output of recycling an item.**
@@ -374,6 +386,7 @@ In-Game Command | Description
 [**team**](commands.md#team) | Get the names of all members in the team.
 [**time**](commands.md#time) | Get the current time In-Game and time till day/night.
 [**timer**](commands.md#timer) | Set custom timers that will notify whenever the timer have expired.
+[**tracker**](commands.md#tracker-ingame) | Display tracked player information using configured trackers.
 [**tr**](commands.md#tr) | Translate a text to another language.
 [**trf**](commands.md#trf) | Translate a text from one language to another.
 [**tts**](commands.md#tts) | Send a Text-To-Speech message to the Discord teamchat channel.
@@ -661,6 +674,14 @@ Subcommand | Description | Required
 `remove` | Remove a custom timer (`!timer remove <id>`). | `False`
 
 ![In-Game Command timer Image](images/ingame_commands/timer_ingame.png)
+
+
+## **tracker ingame**
+
+> **Display tracked player information using configured trackers.**
+<br>Command: `!tracker <tracker-name-or-id>`
+<br>Command: `!tracker info <tracker-name-or-id>`
+<br>Command: `!tracker add <tracker name> <steamId|playerId>`
 
 
 ## **tr**

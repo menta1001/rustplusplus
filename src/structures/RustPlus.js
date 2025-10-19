@@ -2179,13 +2179,74 @@ class RustPlus extends RustPlusLib {
         const commandInfo = Client.client.intlGet(this.guildId, 'commandSyntaxInfo').toLowerCase();
         const commandInfoEn = Client.client.intlGet('en', 'commandSyntaxInfo').toLowerCase();
 
-        const ensureTracker = async (trackerName) => {
-            const trackerNameLower = trackerName.toLowerCase();
-            for (const [trackerId, trackerContent] of Object.entries(instance.trackers)) {
-                if (trackerContent.serverId === this.serverId &&
-                    trackerContent.name.toLowerCase() === trackerNameLower) {
-                    return { tracker: trackerContent, trackerId: trackerId, created: false };
+        const resolveTracker = (trackerName) => {
+            if (!instance.trackers) {
+                return null;
+            }
+
+            const trackers = instance.trackers;
+            const trackerEntries = Object.entries(trackers)
+                .filter(([, tracker]) => tracker.serverId === this.serverId);
+
+            if (Object.prototype.hasOwnProperty.call(trackers, trackerName)) {
+                const tracker = trackers[trackerName];
+                if (tracker && tracker.serverId === this.serverId) {
+                    return { tracker: tracker, trackerId: trackerName };
                 }
+            }
+
+            const trackerNameLower = trackerName.toLowerCase();
+            if (trackerNameLower === '') {
+                return null;
+            }
+
+            const exactMatches = trackerEntries.filter(([, tracker]) =>
+                tracker.name.toLowerCase() === trackerNameLower);
+            if (exactMatches.length === 1) {
+                return { tracker: exactMatches[0][1], trackerId: exactMatches[0][0] };
+            }
+            if (exactMatches.length > 1) {
+                return {
+                    tracker: null,
+                    trackerId: null,
+                    error: 'multiple',
+                    matches: exactMatches.map(([, tracker]) => tracker.name)
+                };
+            }
+
+            const partialMatches = trackerEntries.filter(([, tracker]) =>
+                tracker.name.toLowerCase().includes(trackerNameLower));
+            if (partialMatches.length === 1) {
+                return { tracker: partialMatches[0][1], trackerId: partialMatches[0][0] };
+            }
+            if (partialMatches.length > 1) {
+                return {
+                    tracker: null,
+                    trackerId: null,
+                    error: 'multiple',
+                    matches: partialMatches.map(([, tracker]) => tracker.name)
+                };
+            }
+
+            return null;
+        };
+
+        const ensureTracker = async (trackerName, options = {}) => {
+            const { allowCreate = true } = options;
+
+            const resolved = resolveTracker(trackerName);
+            if (resolved) {
+                if (resolved.error) {
+                    return { tracker: null, trackerId: null, created: false, error: resolved.error, matches: resolved.matches };
+                }
+                return { tracker: resolved.tracker, trackerId: resolved.trackerId, created: false };
+            }
+
+            if (!allowCreate) {
+                if (!instance.trackers || Object.keys(instance.trackers).length === 0) {
+                    return { tracker: null, trackerId: null, created: false, error: 'noTrackers' };
+                }
+                return { tracker: null, trackerId: null, created: false, error: 'notfound' };
             }
 
             const server = instance.serverList[this.serverId];
@@ -2197,6 +2258,7 @@ class RustPlus extends RustPlusLib {
             }
 
             const trackerId = Client.client.findAvailableTrackerId(this.guildId);
+            if (!instance.trackers) instance.trackers = {};
             instance.trackers[trackerId] = {
                 name: trackerName,
                 serverId: this.serverId,
@@ -2236,6 +2298,13 @@ class RustPlus extends RustPlusLib {
             }
             if (result && result.error === 'battlemetrics') {
                 return Client.client.intlGet(this.guildId, 'trackerBattlemetricsMissing');
+            }
+            if (result && result.error === 'multiple') {
+                const matches = result.matches.join(', ');
+                return Client.client.intlGet(this.guildId, 'commandsTrackerMultipleMatches', {
+                    tracker: trackerName,
+                    matches: matches
+                });
             }
             if (!result || !result.tracker) {
                 return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
@@ -2323,12 +2392,25 @@ class RustPlus extends RustPlusLib {
             }
         }
 
-        const result = await ensureTracker(trackerName);
+        const result = await ensureTracker(trackerName, { allowCreate: firstLower !== commandInfo && firstLower !== commandInfoEn });
         if (result && result.error === 'server') {
             return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
         }
         if (result && result.error === 'battlemetrics') {
             return Client.client.intlGet(this.guildId, 'trackerBattlemetricsMissing');
+        }
+        if (result && result.error === 'noTrackers') {
+            return Client.client.intlGet(this.guildId, 'commandsTrackerNoTrackers');
+        }
+        if (result && result.error === 'multiple') {
+            const matches = result.matches.join(', ');
+            return Client.client.intlGet(this.guildId, 'commandsTrackerMultipleMatches', {
+                tracker: trackerName,
+                matches: matches
+            });
+        }
+        if (result && result.error === 'notfound') {
+            return Client.client.intlGet(this.guildId, 'commandsTrackerNotFound', { tracker: trackerName });
         }
         if (!result || !result.tracker) {
             return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
