@@ -256,6 +256,7 @@ async function pairingServer(client, guild, title, message, body) {
         cargoShipEgressTimeMs: server ? server.cargoShipEgressTimeMs : Constants.DEFAULT_CARGO_SHIP_EGRESS_TIME_MS,
         oilRigLockedCrateUnlockTimeMs: server ? server.oilRigLockedCrateUnlockTimeMs :
             Constants.DEFAULT_OIL_RIG_LOCKED_CRATE_UNLOCK_TIME_MS,
+        bradleyRespawnTimeMs: server ? server.bradleyRespawnTimeMs : Constants.DEFAULT_BRADLEY_RESPAWN_TIME_MS,
         timeTillDay: server ? server.timeTillDay : null,
         timeTillNight: server ? server.timeTillNight : null,
         connectionCheckIntervalMinutes: server ? server.connectionCheckIntervalMinutes : 0

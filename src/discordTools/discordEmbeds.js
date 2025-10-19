@@ -769,6 +769,7 @@ module.exports = {
 
         const cargoshipFieldName = Client.client.intlGet(guildId, 'cargoship');
         const patrolHelicopterFieldName = Client.client.intlGet(guildId, 'patrolHelicopter');
+        const bradleyFieldName = Client.client.intlGet(guildId, 'bradleyApc');
         const smallOilRigFieldName = Client.client.intlGet(guildId, 'smallOilRig');
         const largeOilRigFieldName = Client.client.intlGet(guildId, 'largeOilRig');
         const chinook47FieldName = Client.client.intlGet(guildId, 'chinook47');
@@ -776,6 +777,7 @@ module.exports = {
 
         const cargoShipMessage = rustplus.getCommandCargo(true);
         const patrolHelicopterMessage = rustplus.getCommandHeli(true);
+        const bradleyMessage = rustplus.getCommandBradly(true);
         const smallOilMessage = rustplus.getCommandSmall(true);
         const largeOilMessage = rustplus.getCommandLarge(true);
         const ch47Message = rustplus.getCommandChinook(true);
@@ -790,6 +792,7 @@ module.exports = {
             fields: [
                 { name: cargoshipFieldName, value: `\`${cargoShipMessage}\``, inline: true },
                 { name: patrolHelicopterFieldName, value: `\`${patrolHelicopterMessage}\``, inline: true },
+                { name: bradleyFieldName, value: `\`${bradleyMessage}\``, inline: true },
                 { name: smallOilRigFieldName, value: `\`${smallOilMessage}\``, inline: true },
                 { name: largeOilRigFieldName, value: `\`${largeOilMessage}\``, inline: true },
                 { name: chinook47FieldName, value: `\`${ch47Message}\``, inline: true },
