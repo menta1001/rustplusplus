@@ -101,6 +101,7 @@
     "channelNameEvents": "eventos",
     "channelNameInformation": "información",
     "channelNameServers": "servidores",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "configuración",
     "channelNameStorageMonitors": "monitores-de-almacenamiento",
     "channelNameSwitchGroups": "grupos-de-interruptores",
@@ -814,5 +815,9 @@
     "wipeDetected": "¡Wipe detectado!",
     "yield": "Yield",
     "youAreAlreadyLeader": "Ya eres líder.",
-    "youAreNotPairedWithServer": "El comando líder no funciona porque no está emparejado con el servidor."
+    "youAreNotPairedWithServer": "El comando líder no funciona porque no está emparejado con el servidor.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

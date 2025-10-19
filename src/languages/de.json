@@ -101,6 +101,7 @@
     "channelNameEvents": "ereignisse",
     "channelNameInformation": "informationen",
     "channelNameServers": "server",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "einstellungen",
     "channelNameStorageMonitors": "lagermonitore",
     "channelNameSwitchGroups": "schalter-gruppen",
@@ -814,5 +815,9 @@
     "wipeDetected": "Wipe erkannt!",
     "yield": "Ertrag",
     "youAreAlreadyLeader": "Du bist bereits Anführer.",
-    "youAreNotPairedWithServer": "Anführer-Befehl funktioniert nicht, weil du nicht mit dem Server gekoppelt bist."
+    "youAreNotPairedWithServer": "Anführer-Befehl funktioniert nicht, weil du nicht mit dem Server gekoppelt bist.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

@@ -31,6 +31,7 @@ const DiscordTools = require('../discordTools/discordTools.js');
 const InstanceUtils = require('../util/instanceUtils.js');
 const Map = require('../util/map.js');
 const Scrape = require('../util/scrape.js');
+const TeamRoster = require('./teamRoster.js');
 
 module.exports = async (client, guild) => {
     const credentials = InstanceUtils.readCredentialsFile(guild.id);
@@ -250,6 +251,9 @@ async function pairingServer(client, guild, title, message, body) {
         markers: server ? server.markers : {},
         switchGroups: server ? server.switchGroups : {},
         messageId: (messageObj !== undefined) ? messageObj.id : null,
+        teamsMessageId: server ?
+            (server.hasOwnProperty('teamsMessageId') ? server.teamsMessageId :
+                (server.hasOwnProperty('passthroughMessageId') ? server.passthroughMessageId : null)) : null,
         battlemetricsId: battlemetricsId,
         connect: (!bmInstance.lastUpdateSuccessful) ? null :
             `connect ${bmInstance.server_ip}:${bmInstance.server_port}`,
@@ -264,6 +268,8 @@ async function pairingServer(client, guild, title, message, body) {
 
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
 
+    TeamRoster.ensureTeamRoster(instance, serverId);
+
     instance.serverListLite[serverId][body.playerId] = {
         serverIp: body.ip,
         appPort: body.port,
@@ -275,6 +281,7 @@ async function pairingServer(client, guild, title, message, body) {
     client.updateServerConnectionCheckTimer(guild.id, serverId);
 
     await DiscordMessages.sendServerMessage(guild.id, serverId, null);
+    await DiscordMessages.sendTeamsMessage(guild.id, serverId);
 }
 
 async function pairingEntitySwitch(client, guild, title, message, body) {
@@ -516,6 +523,24 @@ async function playerDeath(client, guild, title, message, body, discordUserId) {
 
 async function teamLogin(client, guild, title, message, body) {
     const instance = client.getInstance(guild.id);
+    const serverId = `${body.ip}-${body.port}`;
+
+    const rosterResult = TeamRoster.ensureTeamRoster(instance, serverId);
+    const roster = rosterResult.roster;
+
+    const rosterUpdated = TeamRoster.upsertRosterPlayers(roster, [{
+        steamId: body.targetId,
+        name: body.targetName,
+        lastSeenAt: Date.now()
+    }], {
+        updateLastSeen: true
+    });
+
+    if (rosterResult.changed || rosterUpdated) {
+        instance.teamRosterHistory[serverId] = roster;
+        client.setInstance(guild.id, instance);
+        await DiscordMessages.sendTeamsMessage(guild.id, serverId);
+    }
 
     const content = {
         embeds: [DiscordEmbeds.getTeamLoginEmbed(
@@ -523,7 +548,6 @@ async function teamLogin(client, guild, title, message, body) {
     }
 
     const rustplus = client.rustplusInstances[guild.id];
-    const serverId = `${body.ip}-${body.port}`;
 
     if (!rustplus || (rustplus && (serverId !== rustplus.serverId))) {
         await DiscordMessages.sendMessage(guild.id, content, null, instance.channelId.activity);

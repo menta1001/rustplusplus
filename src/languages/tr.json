@@ -89,6 +89,7 @@
     "channelNameEvents": "olaylar",
     "channelNameInformation": "bilgi",
     "channelNameServers": "sunucular",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "ayarlar",
     "channelNameStorageMonitors": "depolama Monitörleri",
     "channelNameSwitchGroups": "Grupları değiştir",
@@ -814,5 +815,9 @@
     "bradleyRespawned": "Bradley APC should now be active.",
     "bradleyNoData": "No Bradley APC activity recorded yet.",
     "bradleyApcDestroyedSetting": "When Bradley APC is destroyed, send a notification.",
-    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification."
+    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

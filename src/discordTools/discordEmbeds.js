@@ -24,6 +24,7 @@ const Client = require('../../index.ts');
 const Constants = require('../util/constants.js');
 const DiscordTools = require('./discordTools.js');
 const InstanceUtils = require('../util/instanceUtils.js');
+const TeamRoster = require('../util/teamRoster.js');
 const Timer = require('../util/timer');
 
 function isValidUrl(url) {
@@ -118,6 +119,98 @@ module.exports = {
                     Client.client.intlGet(guildId, 'autoReconnectDisabled'),
                 inline: false
             }]
+        });
+    },
+
+    getTeamsEmbed: function (guildId, serverId) {
+        const instance = Client.client.getInstance(guildId);
+        const server = instance.serverList[serverId];
+        const { roster } = TeamRoster.ensureTeamRoster(instance, serverId);
+        const rosterEntries = TeamRoster.rosterToArray(roster);
+        const playersMap = new Map(rosterEntries.map((entry) => [entry.steamId, { ...entry }]));
+        const rustplus = Client.client.rustplusInstances[guildId];
+        const hasActiveTeam = rustplus && rustplus.serverId === serverId && rustplus.team;
+
+        if (hasActiveTeam) {
+            for (const player of rustplus.team.players) {
+                const steamIdCandidate = player?.steamId;
+                if (steamIdCandidate === undefined || steamIdCandidate === null) continue;
+                const steamId = steamIdCandidate.toString();
+                if (steamId === '') continue;
+
+                const sanitizedName = TeamRoster.sanitizeName(player.name ?? '');
+                const entry = playersMap.get(steamId) ?? {
+                    steamId: steamId,
+                    name: '',
+                    lastSeenAt: null
+                };
+
+                if (!playersMap.has(steamId)) {
+                    playersMap.set(steamId, entry);
+                }
+
+                if (sanitizedName !== '') {
+                    entry.name = sanitizedName;
+                }
+            }
+        }
+
+        const players = TeamRoster.sortRosterEntries(Array.from(playersMap.values()));
+        const unknown = Client.client.intlGet(guildId, 'unknown');
+        const noneValue = Client.client.intlGet(guildId, 'teamsNone');
+        const activePlayers = [];
+        const inactivePlayers = [];
+
+        for (const player of players) {
+            const displayName = player.name !== '' ? player.name : unknown;
+            const nameLink = `[${displayName}](${Constants.STEAM_PROFILES_URL}${player.steamId})`;
+            const steamIdString = `\`${player.steamId}\``;
+
+            let isActive = false;
+            let isOnline = false;
+
+            if (hasActiveTeam) {
+                const teamPlayer = rustplus.team.getPlayer(player.steamId);
+                if (teamPlayer) {
+                    isActive = true;
+                    isOnline = teamPlayer.isOnline;
+                }
+            }
+
+            if (isActive) {
+                const statusEmoji = isOnline ? Constants.ONLINE_EMOJI : Constants.OFFLINE_EMOJI;
+                activePlayers.push(`${statusEmoji} ${nameLink}\n${steamIdString}`);
+            }
+            else {
+                inactivePlayers.push(`${Constants.NOT_FOUND_EMOJI} ${nameLink}\n${steamIdString}`);
+            }
+        }
+
+        if (players.length === 0) {
+            activePlayers.push(noneValue);
+            inactivePlayers.push(noneValue);
+        }
+        else {
+            if (activePlayers.length === 0) activePlayers.push(noneValue);
+            if (inactivePlayers.length === 0) inactivePlayers.push(noneValue);
+        }
+
+        return module.exports.getEmbed({
+            title: Client.client.intlGet(guildId, 'teamsListTitle', { server: server.title }),
+            color: Constants.COLOR_DEFAULT,
+            fields: [
+                {
+                    name: Client.client.intlGet(guildId, 'teamsActive'),
+                    value: activePlayers.join('\n'),
+                    inline: false
+                },
+                {
+                    name: Client.client.intlGet(guildId, 'teamsInactive'),
+                    value: inactivePlayers.join('\n'),
+                    inline: false
+                }
+            ],
+            timestamp: true
         });
     },
 

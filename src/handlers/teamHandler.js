@@ -20,11 +20,13 @@
 
 const Constants = require('../util/constants.js');
 const DiscordMessages = require('../discordTools/discordMessages.js');
+const TeamRoster = require('../util/teamRoster.js');
 
 module.exports = {
     handler: async function (rustplus, client, teamInfo) {
         /* Handle team changes */
         await module.exports.checkChanges(rustplus, client, teamInfo);
+        await module.exports.updatePassthroughList(rustplus, client, teamInfo);
     },
 
     checkChanges: async function (rustplus, client, teamInfo) {
@@ -131,4 +133,63 @@ module.exports = {
             }
         }
     },
-}
+
+    updatePassthroughList: async function (rustplus, client, teamInfo) {
+        const instance = client.getInstance(rustplus.guildId);
+        const serverId = rustplus.serverId;
+
+        if (!instance.serverList.hasOwnProperty(serverId)) return;
+
+        const now = Date.now();
+        const rosterResult = TeamRoster.ensureTeamRoster(instance, serverId);
+        const roster = rosterResult.roster;
+
+        const members = Array.isArray(teamInfo?.members) ? teamInfo.members : [];
+        const memberEntries = [];
+        for (const member of members) {
+            const steamId = member?.steamId;
+            if (steamId === undefined || steamId === null) continue;
+            const steamIdStr = steamId.toString();
+            if (steamIdStr === '') continue;
+
+            memberEntries.push({
+                steamId: steamIdStr,
+                name: member.name ?? '',
+                lastSeenAt: now
+            });
+        }
+
+        const rosterUpdatedFromMembers = TeamRoster.upsertRosterPlayers(roster, memberEntries, {
+            updateLastSeen: true,
+            defaultLastSeenAt: now
+        });
+
+        const historicalEntries = [];
+        for (const player of rustplus.team.players) {
+            const steamIdCandidate = player?.steamId;
+            if (steamIdCandidate === undefined || steamIdCandidate === null) continue;
+            const steamIdStr = steamIdCandidate.toString();
+            if (steamIdStr === '') continue;
+
+            historicalEntries.push({
+                steamId: steamIdStr,
+                name: player.name ?? ''
+            });
+        }
+
+        const rosterUpdatedFromHistory = TeamRoster.upsertRosterPlayers(roster, historicalEntries, {
+            updateLastSeen: false
+        });
+
+        if (rosterResult.changed || rosterUpdatedFromMembers || rosterUpdatedFromHistory) {
+            instance.teamRosterHistory[serverId] = roster;
+            client.setInstance(rustplus.guildId, instance);
+        }
+
+        const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+
+        if (!teamsChannelId) return;
+
+        await DiscordMessages.sendTeamsMessage(rustplus.guildId, serverId);
+    }
+};

@@ -35,6 +35,7 @@ module.exports = (client, guild) => {
                 category: null,
                 information: null,
                 servers: null,
+                teams: null,
                 settings: null,
                 commands: null,
                 events: null,
@@ -56,6 +57,7 @@ module.exports = (client, guild) => {
             activeServer: null,
             serverList: {},
             serverListLite: {},
+            teamRosterHistory: {},
             trackers: {},
             marketSubscriptionList: {
                 all: [],
@@ -119,6 +121,7 @@ module.exports = (client, guild) => {
                 category: null,
                 information: null,
                 servers: null,
+                teams: null,
                 settings: null,
                 commands: null,
                 events: null,
@@ -135,6 +138,13 @@ module.exports = (client, guild) => {
             if (!instance.channelId.hasOwnProperty('category')) instance.channelId.category = null;
             if (!instance.channelId.hasOwnProperty('information')) instance.channelId.information = null;
             if (!instance.channelId.hasOwnProperty('servers')) instance.channelId.servers = null;
+            if (instance.channelId.hasOwnProperty('passthrough')) {
+                if (!instance.channelId.hasOwnProperty('teams') || instance.channelId.teams === null) {
+                    instance.channelId.teams = instance.channelId.passthrough;
+                }
+                delete instance.channelId.passthrough;
+            }
+            if (!instance.channelId.hasOwnProperty('teams')) instance.channelId.teams = null;
             if (!instance.channelId.hasOwnProperty('settings')) instance.channelId.settings = null;
             if (!instance.channelId.hasOwnProperty('commands')) instance.channelId.commands = null;
             if (!instance.channelId.hasOwnProperty('events')) instance.channelId.events = null;
@@ -168,6 +178,7 @@ module.exports = (client, guild) => {
         if (!instance.hasOwnProperty('activeServer')) instance.activeServer = null;
         if (!instance.hasOwnProperty('serverList')) instance.serverList = {};
         if (!instance.hasOwnProperty('serverListLite')) instance.serverListLite = {};
+        if (!instance.hasOwnProperty('teamRosterHistory')) instance.teamRosterHistory = {};
         if (!instance.hasOwnProperty('trackers')) instance.trackers = {};
         if (!instance.hasOwnProperty('marketSubscriptionList')) instance.marketSubscriptionList = {
             all: [],
@@ -191,6 +202,10 @@ module.exports = (client, guild) => {
                 instance.serverListLite[serverId] = new Object();
             }
 
+            if (!Object.keys(instance.teamRosterHistory).includes(serverId)) {
+                instance.teamRosterHistory[serverId] = {};
+            }
+
             instance.serverListLite[serverId][instance.serverList[serverId].steamId] = {
                 serverIp: instance.serverList[serverId].serverIp,
                 appPort: instance.serverList[serverId].appPort,
@@ -204,6 +219,13 @@ module.exports = (client, guild) => {
     for (const [serverId, content] of Object.entries(instance.serverList)) {
         if (!content.hasOwnProperty('customCameraGroups')) content.customCameraGroups = {};
         if (!content.hasOwnProperty('connectionCheckIntervalMinutes')) content.connectionCheckIntervalMinutes = 0;
+        if (content.hasOwnProperty('passthroughMessageId')) {
+            if (!content.hasOwnProperty('teamsMessageId') || content.teamsMessageId === null) {
+                content.teamsMessageId = content.passthroughMessageId;
+            }
+            delete content.passthroughMessageId;
+        }
+        if (!content.hasOwnProperty('teamsMessageId')) content.teamsMessageId = null;
     }
 
     client.setInstance(guild.id, instance);

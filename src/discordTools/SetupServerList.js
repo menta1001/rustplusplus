@@ -20,13 +20,30 @@
 
 const DiscordMessages = require('./discordMessages.js');
 const DiscordTools = require('./discordTools.js');
+const TeamRoster = require('../util/teamRoster.js');
 
 module.exports = async (client, guild) => {
     const instance = client.getInstance(guild.id);
 
     await DiscordTools.clearTextChannel(guild.id, instance.channelId.servers, 100);
 
-    for (const serverId in instance.serverList) {
-        await DiscordMessages.sendServerMessage(guild.id, serverId);
+    const teamsChannelId = instance.channelId.teams ?? instance.channelId.passthrough;
+    if (teamsChannelId !== null && teamsChannelId !== undefined) {
+        await DiscordTools.clearTextChannel(guild.id, teamsChannelId, 100);
+        if (instance.channelId.teams !== teamsChannelId) {
+            instance.channelId.teams = teamsChannelId;
+        }
     }
+
+    for (const serverId in instance.serverList) {
+        if (instance.serverList[serverId].hasOwnProperty('passthroughMessageId')) {
+            delete instance.serverList[serverId].passthroughMessageId;
+        }
+        TeamRoster.ensureTeamRoster(instance, serverId);
+        instance.serverList[serverId].teamsMessageId = null;
+        await DiscordMessages.sendServerMessage(guild.id, serverId);
+        await DiscordMessages.sendTeamsMessage(guild.id, serverId);
+    }
+
+    client.setInstance(guild.id, instance);
 };

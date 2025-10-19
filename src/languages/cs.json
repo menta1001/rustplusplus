@@ -101,6 +101,7 @@
     "channelNameEvents": "events",
     "channelNameInformation": "informace",
     "channelNameServers": "servers",
+    "channelNamePassthrough": "teams",
     "channelNameSettings": "nastavení",
     "channelNameStorageMonitors": "skladovací Monitory",
     "channelNameSwitchGroups": "switchGroups",
@@ -814,5 +815,9 @@
     "wipeDetected": "Wipe byl detekován!",
     "yield": "Úrodnost",
     "youAreAlreadyLeader": "Už jsi vůdce.",
-    "youAreNotPairedWithServer": "Příkaz na vůdce nefunguje, protože nejsi spárován se serverem."
+    "youAreNotPairedWithServer": "Příkaz na vůdce nefunguje, protože nejsi spárován se serverem.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

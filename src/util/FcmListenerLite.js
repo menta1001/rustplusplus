@@ -27,6 +27,7 @@ const DiscordTools = require('../discordTools/discordTools.js');
 const InstanceUtils = require('../util/instanceUtils.js');
 const Map = require('../util/map.js');
 const Scrape = require('../util/scrape.js');
+const TeamRoster = require('./teamRoster.js');
 
 module.exports = async (client, guild, steamId) => {
     const credentials = InstanceUtils.readCredentialsFile(guild.id);
@@ -165,6 +166,8 @@ async function pairingServer(client, guild, steamId, title, message, body) {
 
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
 
+    TeamRoster.ensureTeamRoster(instance, serverId);
+
     instance.serverListLite[serverId][steamId] = {
         serverIp: body.ip,
         appPort: body.port,
@@ -177,6 +180,8 @@ async function pairingServer(client, guild, steamId, title, message, body) {
     if (rustplus && (rustplus.serverId === serverId) && rustplus.team.leaderSteamId === steamId) {
         rustplus.updateLeaderRustPlusLiteInstance();
     }
+
+    await DiscordMessages.sendTeamsMessage(guild.id, serverId);
 }
 
 async function pairingEntitySwitch(client, guild, title, message, body) {
