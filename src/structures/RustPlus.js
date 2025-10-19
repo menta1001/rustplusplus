@@ -32,6 +32,7 @@ const DiscordVoice = require('../discordTools/discordVoice.js');
 const DiscordTools = require('../discordTools/discordTools.js');
 const InGameChatHandler = require('../handlers/inGameChatHandler.js');
 const InstanceUtils = require('../util/instanceUtils.js');
+const Scrape = require('../util/scrape.js');
 const Languages = require('../util/languages.js');
 const Logger = require('./Logger.js');
 const Map = require('../util/map.js');
@@ -2139,6 +2140,317 @@ class RustPlus extends RustPlusLib {
         }
 
         return null;
+    }
+
+    async getCommandTracker(command) {
+        const instance = Client.client.getInstance(this.guildId);
+        const prefix = this.generalSettings.prefix;
+        const commandTracker = `${prefix}${Client.client.intlGet(this.guildId, 'commandSyntaxTracker')}`;
+        const commandTrackerEn = `${prefix}${Client.client.intlGet('en', 'commandSyntaxTracker')}`;
+        const commandLower = command.toLowerCase();
+        const usage = Client.client.intlGet(this.guildId, 'trackerCommandUsage', { prefix: prefix });
+
+        let commandBody = null;
+        if (commandLower === commandTracker.toLowerCase() || commandLower === commandTrackerEn.toLowerCase()) {
+            return usage;
+        }
+        else if (commandLower.startsWith(`${commandTracker.toLowerCase()} `)) {
+            commandBody = command.slice(commandTracker.length).trim();
+        }
+        else if (commandLower.startsWith(`${commandTrackerEn.toLowerCase()} `)) {
+            commandBody = command.slice(commandTrackerEn.length).trim();
+        }
+        else {
+            return null;
+        }
+
+        if (commandBody.length === 0) {
+            return usage;
+        }
+
+        const parts = commandBody.split(/\s+/);
+        if (parts.length === 0) {
+            return usage;
+        }
+
+        const commandAdd = Client.client.intlGet(this.guildId, 'commandSyntaxAdd').toLowerCase();
+        const commandAddEn = Client.client.intlGet('en', 'commandSyntaxAdd').toLowerCase();
+        const commandInfo = Client.client.intlGet(this.guildId, 'commandSyntaxInfo').toLowerCase();
+        const commandInfoEn = Client.client.intlGet('en', 'commandSyntaxInfo').toLowerCase();
+
+        const ensureTracker = async (trackerName) => {
+            const trackerNameLower = trackerName.toLowerCase();
+            for (const [trackerId, trackerContent] of Object.entries(instance.trackers)) {
+                if (trackerContent.serverId === this.serverId &&
+                    trackerContent.name.toLowerCase() === trackerNameLower) {
+                    return { tracker: trackerContent, trackerId: trackerId, created: false };
+                }
+            }
+
+            const server = instance.serverList[this.serverId];
+            if (!server) {
+                return { tracker: null, trackerId: null, created: false, error: 'server' };
+            }
+            if (!server.battlemetricsId) {
+                return { tracker: null, trackerId: null, created: false, error: 'battlemetrics' };
+            }
+
+            const trackerId = Client.client.findAvailableTrackerId(this.guildId);
+            instance.trackers[trackerId] = {
+                name: trackerName,
+                serverId: this.serverId,
+                battlemetricsId: server.battlemetricsId,
+                title: server.title,
+                img: server.img,
+                clanTag: '',
+                everyone: false,
+                inGame: true,
+                players: [],
+                messageId: null
+            };
+            Client.client.setInstance(this.guildId, instance);
+            await DiscordMessages.sendTrackerMessage(this.guildId, trackerId);
+
+            return { tracker: instance.trackers[trackerId], trackerId: trackerId, created: true };
+        };
+
+        const firstLower = parts[0].toLowerCase();
+
+        if (firstLower === commandAdd || firstLower === commandAddEn) {
+            if (parts.length < 3) {
+                return Client.client.intlGet(this.guildId, 'trackerAddUsage', { prefix: prefix });
+            }
+
+            const identifier = parts[parts.length - 1];
+            const trackerNamePart = commandBody.slice(parts[0].length).trim();
+            const trackerName = trackerNamePart.slice(0, trackerNamePart.length - identifier.length).trim();
+
+            if (trackerName === '' || identifier === '') {
+                return Client.client.intlGet(this.guildId, 'trackerAddUsage', { prefix: prefix });
+            }
+
+            const result = await ensureTracker(trackerName);
+            if (result && result.error === 'server') {
+                return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
+            }
+            if (result && result.error === 'battlemetrics') {
+                return Client.client.intlGet(this.guildId, 'trackerBattlemetricsMissing');
+            }
+            if (!result || !result.tracker) {
+                return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
+            }
+
+            const tracker = result.tracker;
+            const trackerId = result.trackerId;
+            const created = result.created;
+
+            const isSteamId64 = identifier.length === Constants.STEAMID64_LENGTH && /^\d+$/.test(identifier);
+            if (isSteamId64) {
+                if (tracker.players.some(e => e.steamId === identifier)) {
+                    return Client.client.intlGet(this.guildId, 'trackerPlayerAlreadyTracked', {
+                        player: identifier,
+                        tracker: tracker.name
+                    });
+                }
+            }
+            else {
+                if (tracker.players.some(e => e.playerId === identifier && e.steamId === null)) {
+                    return Client.client.intlGet(this.guildId, 'trackerPlayerAlreadyTracked', {
+                        player: identifier,
+                        tracker: tracker.name
+                    });
+                }
+            }
+
+            const bmInstance = tracker.battlemetricsId ?
+                Client.client.battlemetricsInstances[tracker.battlemetricsId] : null;
+
+            let storedName = null;
+            let steamId = null;
+            let playerId = null;
+
+            if (isSteamId64) {
+                steamId = identifier;
+                storedName = await Scrape.scrapeSteamProfileName(Client.client, steamId);
+                if (storedName && tracker.clanTag !== '') {
+                    storedName = `${tracker.clanTag} ${storedName}`;
+                }
+                if (storedName && bmInstance && bmInstance.players) {
+                    const foundId = Object.keys(bmInstance.players)
+                        .find(e => bmInstance.players[e]['name'] === storedName);
+                    if (foundId) playerId = foundId;
+                }
+            }
+            else {
+                playerId = identifier;
+                if (bmInstance && bmInstance.players && bmInstance.players.hasOwnProperty(playerId)) {
+                    storedName = bmInstance.players[playerId]['name'];
+                }
+                else {
+                    storedName = '-';
+                }
+            }
+
+            const displayName = (storedName && storedName !== '-') ? storedName : identifier;
+
+            tracker.players.push({
+                name: storedName,
+                steamId: steamId,
+                playerId: playerId
+            });
+            Client.client.setInstance(this.guildId, instance);
+
+            await DiscordMessages.sendTrackerMessage(this.guildId, trackerId);
+
+            const responses = [];
+            if (created) {
+                responses.push(Client.client.intlGet(this.guildId, 'trackerCreated', { tracker: tracker.name }));
+            }
+            responses.push(Client.client.intlGet(this.guildId, 'trackerPlayerAdded', {
+                player: displayName,
+                tracker: tracker.name
+            }));
+
+            return responses.join(' ');
+        }
+
+        let trackerName = commandBody;
+        if (firstLower === commandInfo || firstLower === commandInfoEn) {
+            trackerName = commandBody.slice(parts[0].length).trim();
+            if (trackerName === '') {
+                return Client.client.intlGet(this.guildId, 'trackerInfoUsage', { prefix: prefix });
+            }
+        }
+
+        const result = await ensureTracker(trackerName);
+        if (result && result.error === 'server') {
+            return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
+        }
+        if (result && result.error === 'battlemetrics') {
+            return Client.client.intlGet(this.guildId, 'trackerBattlemetricsMissing');
+        }
+        if (!result || !result.tracker) {
+            return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
+        }
+
+        const tracker = result.tracker;
+
+        if (result.created && tracker.players.length === 0) {
+            return `${Client.client.intlGet(this.guildId, 'trackerCreated', { tracker: tracker.name })} ` +
+                `${Client.client.intlGet(this.guildId, 'trackerNoPlayers', { tracker: tracker.name })}`;
+        }
+
+        if (!tracker.players || tracker.players.length === 0) {
+            return Client.client.intlGet(this.guildId, 'trackerNoPlayers', { tracker: tracker.name });
+        }
+
+        const bmInstance = tracker.battlemetricsId ?
+            Client.client.battlemetricsInstances[tracker.battlemetricsId] : null;
+        const hasData = bmInstance && bmInstance.lastUpdateSuccessful;
+
+        const entries = [];
+        const maxEntryLength = 40;
+        for (const player of tracker.players) {
+            let displayName = player.name;
+            if (!displayName || displayName === '-') {
+                displayName = player.steamId || player.playerId || Client.client.intlGet(this.guildId, 'unknown');
+            }
+            if (displayName.length > Constants.STEAM_PROFILE_NAME_MAX_LENGTH) {
+                displayName = `${displayName.slice(0, Constants.STEAM_PROFILE_NAME_MAX_LENGTH - 2)}..`;
+            }
+
+            let statusText = null;
+            if (hasData && player.playerId !== null && bmInstance.players.hasOwnProperty(player.playerId)) {
+                if (bmInstance.players[player.playerId]['status']) {
+                    const time = bmInstance.getOnlineTime(player.playerId);
+                    statusText = time ?
+                        Client.client.intlGet(this.guildId, 'trackerPlayerStatusOnline', { time: time[1] }) :
+                        Client.client.intlGet(this.guildId, 'trackerPlayerStatusOnlineSimple');
+                }
+                else {
+                    const time = bmInstance.getOfflineTime(player.playerId);
+                    statusText = time ?
+                        Client.client.intlGet(this.guildId, 'trackerPlayerStatusOffline', { time: time[1] }) :
+                        Client.client.intlGet(this.guildId, 'trackerPlayerStatusOfflineSimple');
+                }
+            }
+            else {
+                statusText = Client.client.intlGet(this.guildId, 'trackerPlayerStatusUnknown');
+            }
+
+            let entry = Client.client.intlGet(this.guildId, 'trackerInfoLine', {
+                name: displayName,
+                status: statusText
+            });
+
+            if (entry.length > maxEntryLength) {
+                entry = `${entry.slice(0, maxEntryLength - 2)}..`;
+            }
+
+            entries.push(entry);
+        }
+
+        const trademark = this.generalSettings.trademark;
+        const trademarkString = (trademark === 'NOT SHOWING') ? '' : `${trademark} | `;
+        const messageMaxLength = Constants.MAX_LENGTH_TEAM_MESSAGE - trademarkString.length;
+        const header = Client.client.intlGet(this.guildId, 'trackerInfoHeader', { tracker: tracker.name });
+        const entriesLimited = [];
+        let currentLength = `${header} `.length;
+
+        for (const entry of entries) {
+            const separatorLength = entriesLimited.length > 0 ? 2 : 0;
+            if ((currentLength + separatorLength + entry.length) > messageMaxLength) {
+                break;
+            }
+            entriesLimited.push(entry);
+            currentLength += separatorLength + entry.length;
+        }
+
+        let remaining = entries.length - entriesLimited.length;
+        let message = entriesLimited.length > 0 ?
+            `${header} ${entriesLimited.join(', ')}` :
+            `${header}`;
+
+        const moreWord = Client.client.intlGet(this.guildId, 'more');
+        if (remaining > 0) {
+            let suffix = ` ...${remaining} ${moreWord}.`;
+            while ((message.length + suffix.length) > messageMaxLength && entriesLimited.length > 0) {
+                entriesLimited.pop();
+                remaining = entries.length - entriesLimited.length;
+                message = entriesLimited.length > 0 ?
+                    `${header} ${entriesLimited.join(', ')}` :
+                    `${header}`;
+                suffix = ` ...${remaining} ${moreWord}.`;
+            }
+            if ((message.length + suffix.length) > messageMaxLength) {
+                message = header;
+                suffix = (message.length + suffix.length) <= messageMaxLength ? suffix : '';
+            }
+            message = `${message}${suffix}`;
+        }
+        else {
+            if (!message.endsWith('.')) message += '.';
+        }
+
+        if (!message.endsWith('.')) {
+            if ((message.length + 1) <= messageMaxLength) {
+                message += '.';
+            }
+        }
+
+        if (!hasData) {
+            const noDataString = Client.client.intlGet(this.guildId, 'noData');
+            if (message.endsWith('.')) {
+                if ((message.length + 1 + noDataString.length) <= messageMaxLength) {
+                    message += ` ${noDataString}`;
+                }
+            }
+            else if ((message.length + 2 + noDataString.length) <= messageMaxLength) {
+                message += `. ${noDataString}`;
+            }
+        }
+
+        return message;
     }
 
     getCommandPop(isInfoChannel = false) {

@@ -137,6 +137,13 @@ module.exports = {
                 commandLowerCase.startsWith(`${prefix}${client.intlGet(guildId, 'commandSyntaxPlayers')}`))) {
             rustplus.sendInGameMessage(rustplus.getCommandPlayer(command));
         }
+        else if (commandLowerCase === `${prefix}${client.intlGet('en', 'commandSyntaxTracker')}` ||
+            commandLowerCase === `${prefix}${client.intlGet(guildId, 'commandSyntaxTracker')}` ||
+            commandLowerCase.startsWith(`${prefix}${client.intlGet('en', 'commandSyntaxTracker')} `) ||
+            commandLowerCase.startsWith(`${prefix}${client.intlGet(guildId, 'commandSyntaxTracker')} `)) {
+            const response = await rustplus.getCommandTracker(command);
+            if (response) rustplus.sendInGameMessage(response);
+        }
         else if (commandLowerCase === `${prefix}${client.intlGet('en', 'commandSyntaxPop')}` ||
             commandLowerCase === `${prefix}${client.intlGet(guildId, 'commandSyntaxPop')}`) {
             rustplus.sendInGameMessage(rustplus.getCommandPop());
