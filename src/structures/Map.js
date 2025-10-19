@@ -19,7 +19,6 @@
 */
 
 const Fs = require('fs');
-const Gm = require('gm');
 const Jimp = require('jimp');
 const Path = require('path');
 
@@ -423,58 +422,12 @@ class Map {
             await this.mapAppendMonuments();
         }
 
+        if (markers) {
+            await this.appendTracers();
+        }
+
         await this.mapMarkerImageMeta.map.jimp.writeAsync(
             this.mapMarkerImageMeta.map.image.replace('clean.png', 'full.png'));
-
-        try {
-            const image = Gm(this.mapMarkerImageMeta.map.image.replace('clean.png', 'full.png'));
-
-            if (this.rustplus.info === null) {
-                this.rustplus.log(Client.client.intlGet(null, 'warningCap'),
-                    Client.client.intlGet(null, 'couldNotAppendMapTracers'));
-                return;
-            }
-
-            if (!markers) return;
-
-            /* Tracer for CargoShip */
-            image.stroke(Constants.COLOR_CARGO_TRACER, 2);
-            for (const [id, coords] of Object.entries(this.rustplus.cargoShipTracers)) {
-                let prev = null;
-                for (const point of coords) {
-                    if (prev === null) {
-                        prev = point;
-                        continue;
-                    }
-                    const point1 = this.calculateImageXY(prev);
-                    const point2 = this.calculateImageXY(point);
-                    image.drawLine(point1.x, point1.y, point2.x, point2.y);
-                    prev = point;
-                }
-            }
-
-            /* Tracer for Patrol Helicopter */
-            image.stroke(Constants.COLOR_PATROL_HELICOPTER_TRACER, 2);
-            for (const [id, coords] of Object.entries(this.rustplus.patrolHelicopterTracers)) {
-                let prev = null;
-                for (const point of coords) {
-                    if (prev === null) {
-                        prev = point;
-                        continue;
-                    }
-                    const point1 = this.calculateImageXY(prev);
-                    const point2 = this.calculateImageXY(point);
-                    image.drawLine(point1.x, point1.y, point2.x, point2.y);
-                    prev = point;
-                }
-            }
-
-            await this.gmWriteAsync(image, this.mapMarkerImageMeta.map.image.replace('clean.png', 'full.png'));
-        }
-        catch (error) {
-            this.rustplus.log(Client.client.intlGet(null, 'warningCap'),
-                Client.client.intlGet(null, 'couldNotAddStepTracers'));
-        }
     }
 
     getMarkerImageMetaByType(type) {
@@ -503,17 +456,84 @@ class Map {
         return { x: x, y: y };
     }
 
-    async gmWriteAsync(image, path) {
-        return new Promise(function (resolve, reject) {
-            image.write(path, (err) => {
-                if (err) {
-                    reject(err);
+    async appendTracers() {
+        if (this.rustplus.info === null) {
+            this.rustplus.log(Client.client.intlGet(null, 'warningCap'),
+                Client.client.intlGet(null, 'couldNotAppendMapTracers'));
+            return;
+        }
+
+        const image = this.mapMarkerImageMeta.map.jimp;
+
+        this.drawTracerSet(image, this.rustplus.cargoShipTracers, Constants.COLOR_CARGO_TRACER, 2);
+        this.drawTracerSet(image, this.rustplus.patrolHelicopterTracers,
+            Constants.COLOR_PATROL_HELICOPTER_TRACER, 2);
+    }
+
+    drawTracerSet(image, tracerCollection, color, thickness) {
+        for (const coords of Object.values(tracerCollection)) {
+            let previous = null;
+            for (const point of coords) {
+                if (previous === null) {
+                    previous = point;
+                    continue;
                 }
-                else {
-                    resolve()
-                }
-            })
-        });
+
+                const point1 = this.calculateImageXY(previous);
+                const point2 = this.calculateImageXY(point);
+                this.drawLine(image, point1, point2, color, thickness);
+                previous = point;
+            }
+        }
+    }
+
+    drawLine(image, fromPoint, toPoint, color, thickness = 1) {
+        const colorInt = this.parseColor(color);
+        let x0 = Math.round(fromPoint.x);
+        let y0 = Math.round(fromPoint.y);
+        const x1 = Math.round(toPoint.x);
+        const y1 = Math.round(toPoint.y);
+
+        const dx = Math.abs(x1 - x0);
+        const sx = x0 < x1 ? 1 : -1;
+        const dy = -Math.abs(y1 - y0);
+        const sy = y0 < y1 ? 1 : -1;
+        let err = dx + dy;
+        const radius = Math.max(0, Math.ceil(thickness / 2));
+
+        // Bresenham's line algorithm with thickness support
+        while (true) {
+            this.drawThickPixel(image, x0, y0, colorInt, radius);
+            if (x0 === x1 && y0 === y1) break;
+            const e2 = 2 * err;
+            if (e2 >= dy) {
+                err += dy;
+                x0 += sx;
+            }
+            if (e2 <= dx) {
+                err += dx;
+                y0 += sy;
+            }
+        }
+    }
+
+    drawThickPixel(image, centerX, centerY, color, radius) {
+        for (let offsetX = -radius; offsetX <= radius; offsetX++) {
+            for (let offsetY = -radius; offsetY <= radius; offsetY++) {
+                const x = centerX + offsetX;
+                const y = centerY + offsetY;
+                if (x < 0 || y < 0 || x >= this.width || y >= this.height) continue;
+                image.setPixelColor(color, x, y);
+            }
+        }
+    }
+
+    parseColor(color) {
+        const normalized = color.startsWith('#') ? color.slice(1) : color;
+        const r = parseInt(normalized.slice(0, 2), 16);
+        const g = parseInt(normalized.slice(2, 4), 16);
+        const b = parseInt(normalized.slice(4, 6), 16);
+        return Jimp.rgbaToInt(r, g, b, 255);
     }
 }
 
