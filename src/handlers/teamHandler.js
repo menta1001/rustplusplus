@@ -20,6 +20,7 @@
 
 const Constants = require('../util/constants.js');
 const DiscordMessages = require('../discordTools/discordMessages.js');
+const TeamRoster = require('../util/teamRoster.js');
 
 module.exports = {
     handler: async function (rustplus, client, teamInfo) {
@@ -139,56 +140,48 @@ module.exports = {
 
         if (!instance.serverList.hasOwnProperty(serverId)) return;
 
-        let hasChanges = false;
+        const now = Date.now();
+        const rosterResult = TeamRoster.ensureTeamRoster(instance, serverId);
+        const roster = rosterResult.roster;
 
-        if (!instance.hasOwnProperty('teamRosterHistory')) {
-            instance.teamRosterHistory = {};
-            hasChanges = true;
-        }
-
-        if (!instance.teamRosterHistory.hasOwnProperty(serverId)) {
-            instance.teamRosterHistory[serverId] = {};
-            hasChanges = true;
-        }
-
-        const roster = instance.teamRosterHistory[serverId];
-
-        const ensureRosterEntry = (steamId, possibleName) => {
-            const storedPlayer = roster[steamId];
-            const candidateName = typeof possibleName === 'string' ? possibleName.trim() : '';
-            const fallbackName = storedPlayer ? storedPlayer.name : '';
-            const resolvedName = candidateName !== '' ? candidateName : fallbackName;
-
-            if (!storedPlayer) {
-                roster[steamId] = {
-                    steamId: steamId,
-                    name: resolvedName
-                };
-                hasChanges = true;
-            }
-            else if (storedPlayer.name !== resolvedName) {
-                roster[steamId].name = resolvedName;
-                hasChanges = true;
-            }
-        };
-
-        const processedSteamIds = new Set();
-
-        const members = teamInfo && Array.isArray(teamInfo.members) ? teamInfo.members : [];
+        const members = Array.isArray(teamInfo?.members) ? teamInfo.members : [];
+        const memberEntries = [];
         for (const member of members) {
-            const steamId = member?.steamId?.toString();
-            if (!steamId) continue;
-            ensureRosterEntry(steamId, member.name ?? '');
-            processedSteamIds.add(steamId);
+            const steamId = member?.steamId;
+            if (steamId === undefined || steamId === null) continue;
+            const steamIdStr = steamId.toString();
+            if (steamIdStr === '') continue;
+
+            memberEntries.push({
+                steamId: steamIdStr,
+                name: member.name ?? '',
+                lastSeenAt: now
+            });
         }
 
+        const rosterUpdatedFromMembers = TeamRoster.upsertRosterPlayers(roster, memberEntries, {
+            updateLastSeen: true,
+            defaultLastSeenAt: now
+        });
+
+        const historicalEntries = [];
         for (const player of rustplus.team.players) {
-            const steamId = player.steamId.toString();
-            if (processedSteamIds.has(steamId)) continue;
-            ensureRosterEntry(steamId, player.name ?? '');
+            const steamIdCandidate = player?.steamId;
+            if (steamIdCandidate === undefined || steamIdCandidate === null) continue;
+            const steamIdStr = steamIdCandidate.toString();
+            if (steamIdStr === '') continue;
+
+            historicalEntries.push({
+                steamId: steamIdStr,
+                name: player.name ?? ''
+            });
         }
 
-        if (hasChanges) {
+        const rosterUpdatedFromHistory = TeamRoster.upsertRosterPlayers(roster, historicalEntries, {
+            updateLastSeen: false
+        });
+
+        if (rosterResult.changed || rosterUpdatedFromMembers || rosterUpdatedFromHistory) {
             instance.teamRosterHistory[serverId] = roster;
             client.setInstance(rustplus.guildId, instance);
         }

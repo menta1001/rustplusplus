@@ -27,6 +27,7 @@ const DiscordTools = require('../discordTools/discordTools.js');
 const InstanceUtils = require('../util/instanceUtils.js');
 const Map = require('../util/map.js');
 const Scrape = require('../util/scrape.js');
+const TeamRoster = require('./teamRoster.js');
 
 module.exports = async (client, guild, steamId) => {
     const credentials = InstanceUtils.readCredentialsFile(guild.id);
@@ -165,8 +166,7 @@ async function pairingServer(client, guild, steamId, title, message, body) {
 
     if (!instance.serverListLite.hasOwnProperty(serverId)) instance.serverListLite[serverId] = new Object();
 
-    if (!instance.hasOwnProperty('teamRosterHistory')) instance.teamRosterHistory = {};
-    if (!instance.teamRosterHistory.hasOwnProperty(serverId)) instance.teamRosterHistory[serverId] = {};
+    TeamRoster.ensureTeamRoster(instance, serverId);
 
     instance.serverListLite[serverId][steamId] = {
         serverIp: body.ip,

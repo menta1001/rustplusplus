@@ -24,6 +24,7 @@ const Client = require('../../index.ts');
 const Constants = require('../util/constants.js');
 const DiscordTools = require('./discordTools.js');
 const InstanceUtils = require('../util/instanceUtils.js');
+const TeamRoster = require('../util/teamRoster.js');
 const Timer = require('../util/timer');
 
 function isValidUrl(url) {
@@ -124,50 +125,60 @@ module.exports = {
     getTeamsEmbed: function (guildId, serverId) {
         const instance = Client.client.getInstance(guildId);
         const server = instance.serverList[serverId];
-        const roster = instance.hasOwnProperty('teamRosterHistory') &&
-            instance.teamRosterHistory.hasOwnProperty(serverId) ?
-            instance.teamRosterHistory[serverId] : {};
+        const { roster } = TeamRoster.ensureTeamRoster(instance, serverId);
+        const rosterEntries = TeamRoster.rosterToArray(roster);
+        const playersMap = new Map(rosterEntries.map((entry) => [entry.steamId, { ...entry }]));
         const rustplus = Client.client.rustplusInstances[guildId];
         const hasActiveTeam = rustplus && rustplus.serverId === serverId && rustplus.team;
 
-        const players = [];
-        const unknown = Client.client.intlGet(guildId, 'unknown');
+        if (hasActiveTeam) {
+            for (const player of rustplus.team.players) {
+                const steamIdCandidate = player?.steamId;
+                if (steamIdCandidate === undefined || steamIdCandidate === null) continue;
+                const steamId = steamIdCandidate.toString();
+                if (steamId === '') continue;
 
-        for (const [steamId, data] of Object.entries(roster)) {
-            const storedName = data && typeof data === 'object' && data.hasOwnProperty('name') ? data.name : null;
-            let name = storedName ? storedName : unknown;
-            let inTeam = false;
+                const sanitizedName = TeamRoster.sanitizeName(player.name ?? '');
+                const entry = playersMap.get(steamId) ?? {
+                    steamId: steamId,
+                    name: '',
+                    lastSeenAt: null
+                };
+
+                if (!playersMap.has(steamId)) {
+                    playersMap.set(steamId, entry);
+                }
+
+                if (sanitizedName !== '') {
+                    entry.name = sanitizedName;
+                }
+            }
+        }
+
+        const players = TeamRoster.sortRosterEntries(Array.from(playersMap.values()));
+        const unknown = Client.client.intlGet(guildId, 'unknown');
+        const noneValue = Client.client.intlGet(guildId, 'teamsNone');
+        const activePlayers = [];
+        const inactivePlayers = [];
+
+        for (const player of players) {
+            const displayName = player.name !== '' ? player.name : unknown;
+            const nameLink = `[${displayName}](${Constants.STEAM_PROFILES_URL}${player.steamId})`;
+            const steamIdString = `\`${player.steamId}\``;
+
+            let isActive = false;
             let isOnline = false;
 
             if (hasActiveTeam) {
-                const player = rustplus.team.getPlayer(steamId);
-                if (player) {
-                    inTeam = true;
-                    isOnline = player.isOnline;
-                    name = player.name === '' ? unknown : player.name;
+                const teamPlayer = rustplus.team.getPlayer(player.steamId);
+                if (teamPlayer) {
+                    isActive = true;
+                    isOnline = teamPlayer.isOnline;
                 }
             }
 
-            players.push({
-                steamId: steamId,
-                name: name,
-                inTeam: inTeam,
-                isOnline: isOnline
-            });
-        }
-
-        players.sort((a, b) => a.name.localeCompare(b.name));
-
-        const activePlayers = [];
-        const inactivePlayers = [];
-        const noneValue = Client.client.intlGet(guildId, 'teamsNone');
-
-        for (const player of players) {
-            const nameLink = `[${player.name}](${Constants.STEAM_PROFILES_URL}${player.steamId})`;
-            const steamIdString = `\`${player.steamId}\``;
-
-            if (player.inTeam) {
-                const statusEmoji = player.isOnline ? Constants.ONLINE_EMOJI : Constants.OFFLINE_EMOJI;
+            if (isActive) {
+                const statusEmoji = isOnline ? Constants.ONLINE_EMOJI : Constants.OFFLINE_EMOJI;
                 activePlayers.push(`${statusEmoji} ${nameLink}\n${steamIdString}`);
             }
             else {

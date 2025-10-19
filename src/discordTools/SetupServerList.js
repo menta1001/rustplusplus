@@ -20,6 +20,7 @@
 
 const DiscordMessages = require('./discordMessages.js');
 const DiscordTools = require('./discordTools.js');
+const TeamRoster = require('../util/teamRoster.js');
 
 module.exports = async (client, guild) => {
     const instance = client.getInstance(guild.id);
@@ -38,6 +39,7 @@ module.exports = async (client, guild) => {
         if (instance.serverList[serverId].hasOwnProperty('passthroughMessageId')) {
             delete instance.serverList[serverId].passthroughMessageId;
         }
+        TeamRoster.ensureTeamRoster(instance, serverId);
         instance.serverList[serverId].teamsMessageId = null;
         await DiscordMessages.sendServerMessage(guild.id, serverId);
         await DiscordMessages.sendTeamsMessage(guild.id, serverId);
