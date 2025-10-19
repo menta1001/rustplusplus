@@ -18,10 +18,10 @@
 
 */
 
+const Axios = require('axios');
 const Fs = require('fs');
 const Path = require('path');
 const RustPlusLib = require('@liamcottle/rustplus.js');
-const Translate = require('translate');
 
 const Client = require('../../index.ts');
 const Constants = require('../util/constants.js');
@@ -38,6 +38,9 @@ const Map = require('../util/map.js');
 const RustPlusLite = require('../structures/RustPlusLite');
 const TeamHandler = require('../handlers/teamHandler.js');
 const Timer = require('../util/timer.js');
+
+const SupportedLanguageCodes = new Set(Object.values(Languages));
+SupportedLanguageCodes.add('auto');
 
 const TOKENS_LIMIT = 24;        /* Per player */
 const TOKENS_REPLENISH = 3;     /* Per second */
@@ -2573,13 +2576,23 @@ class RustPlus extends RustPlusLib {
             return Client.client.intlGet(this.guildId, 'missingArguments');
         }
 
-        try {
-            return await Translate(text, language);
-        }
-        catch (e) {
+        if (!SupportedLanguageCodes.has(language)) {
             return Client.client.intlGet(this.guildId, 'languageLangNotSupported', {
                 language: language
             });
+        }
+
+        try {
+            return await this.translateText(text, { to: language });
+        }
+        catch (e) {
+            if (e.message.startsWith('language_not_supported:')) {
+                return Client.client.intlGet(this.guildId, 'languageLangNotSupported', {
+                    language: e.message.split(':')[1]
+                });
+            }
+
+            return Client.client.intlGet(this.guildId, 'languageNotSupported');
         }
     }
 
@@ -2604,20 +2617,62 @@ class RustPlus extends RustPlusLib {
             return Client.client.intlGet(this.guildId, 'missingArguments');
         }
 
+        if (!SupportedLanguageCodes.has(languageFrom)) {
+            return Client.client.intlGet(this.guildId, 'languageLangNotSupported', {
+                language: languageFrom
+            });
+        }
+
+        if (!SupportedLanguageCodes.has(languageTo)) {
+            return Client.client.intlGet(this.guildId, 'languageLangNotSupported', {
+                language: languageTo
+            });
+        }
+
         try {
-            return await Translate(text, { from: languageFrom, to: languageTo });
+            return await this.translateText(text, { from: languageFrom, to: languageTo });
         }
         catch (e) {
-            const regex = new RegExp('The language "(.*?)"');
-            const invalidLanguage = regex.exec(e.message);
-
-            if (invalidLanguage.length === 2) {
+            if (e.message.startsWith('language_not_supported:')) {
                 return Client.client.intlGet(this.guildId, 'languageLangNotSupported', {
-                    language: invalidLanguage[1]
+                    language: e.message.split(':')[1]
                 });
             }
 
             return Client.client.intlGet(this.guildId, 'languageNotSupported');
+        }
+    }
+
+    async translateText(text, options) {
+        const params = new URLSearchParams({
+            client: 'gtx',
+            sl: options.from ?? 'auto',
+            tl: options.to,
+            dt: 't',
+            q: text
+        });
+
+        try {
+            const response = await Axios.get('https://translate.googleapis.com/translate_a/single', {
+                params,
+                responseType: 'text'
+            });
+
+            const data = JSON.parse(response.data);
+            const [translations] = data;
+            if (!Array.isArray(translations)) {
+                throw new Error('unexpected_response');
+            }
+
+            return translations.map(segment => segment[0]).join('');
+        }
+        catch (error) {
+            if (error.response && error.response.status === 400) {
+                const invalid = error.config?.params?.tl ?? options.to;
+                throw new Error(`language_not_supported:${invalid}`);
+            }
+
+            throw error;
         }
     }
 
