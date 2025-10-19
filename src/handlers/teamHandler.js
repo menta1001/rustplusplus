@@ -197,6 +197,6 @@ module.exports = {
 
         if (!teamsChannelId) return;
 
-        await DiscordMessages.sendPassthroughMessage(rustplus.guildId, serverId);
+        await DiscordMessages.sendTeamsMessage(rustplus.guildId, serverId);
     }
 };

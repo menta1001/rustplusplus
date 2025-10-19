@@ -715,10 +715,6 @@
     "switches": "Schalter",
     "teamMember": "Teammitglied",
     "teamMemberInfo": "Teammitglied-Informationen",
-    "passthroughListTitle": "Team Roster - {server}",
-    "passthroughActive": "Current Team",
-    "passthroughInactive": "Former Teammates",
-    "passthroughNone": "No teammates recorded yet.",
     "theDome": "Kugeltank",
     "theIdOfTheItem": "Die ID des Gegenstandes.",
     "theNameOfTheItem": "Der Name des Gegenstandes.",
@@ -819,5 +815,9 @@
     "wipeDetected": "Wipe erkannt!",
     "yield": "Ertrag",
     "youAreAlreadyLeader": "Du bist bereits Anführer.",
-    "youAreNotPairedWithServer": "Anführer-Befehl funktioniert nicht, weil du nicht mit dem Server gekoppelt bist."
+    "youAreNotPairedWithServer": "Anführer-Befehl funktioniert nicht, weil du nicht mit dem Server gekoppelt bist.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

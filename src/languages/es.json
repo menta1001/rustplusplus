@@ -715,10 +715,6 @@
     "switches": "Interruptores",
     "teamMember": "Miembro del Equipo",
     "teamMemberInfo": "Información del miembro del grupo",
-    "passthroughListTitle": "Team Roster - {server}",
-    "passthroughActive": "Current Team",
-    "passthroughInactive": "Former Teammates",
-    "passthroughNone": "No teammates recorded yet.",
     "theDome": "La Cúpula",
     "theIdOfTheItem": "The id of the item.",
     "theNameOfTheItem": "The name of the item.",
@@ -819,5 +815,9 @@
     "wipeDetected": "¡Wipe detectado!",
     "yield": "Yield",
     "youAreAlreadyLeader": "Ya eres líder.",
-    "youAreNotPairedWithServer": "El comando líder no funciona porque no está emparejado con el servidor."
+    "youAreNotPairedWithServer": "El comando líder no funciona porque no está emparejado con el servidor.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

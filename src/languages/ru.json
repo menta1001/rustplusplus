@@ -701,10 +701,6 @@
     "switches": "Переключатель",
     "teamMember": "Члены команды",
     "teamMemberInfo": "Информация о команде",
-    "passthroughListTitle": "Team Roster - {server}",
-    "passthroughActive": "Current Team",
-    "passthroughInactive": "Former Teammates",
-    "passthroughNone": "No teammates recorded yet.",
     "theDome": "Сфера",
     "theIdOfTheItem": "Id предмета.",
     "theNameOfTheItem": "Название предмета.",
@@ -819,5 +815,9 @@
     "bradleyRespawned": "Bradley APC should now be active.",
     "bradleyNoData": "No Bradley APC activity recorded yet.",
     "bradleyApcDestroyedSetting": "When Bradley APC is destroyed, send a notification.",
-    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification."
+    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

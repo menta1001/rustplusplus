@@ -715,10 +715,6 @@
     "switches": "Switches",
     "teamMember": "Team Member",
     "teamMemberInfo": "Team Member Information",
-    "passthroughListTitle": "Team Roster - {server}",
-    "passthroughActive": "Current Team",
-    "passthroughInactive": "Former Teammates",
-    "passthroughNone": "No teammates recorded yet.",
     "theDome": "The Dome",
     "theIdOfTheItem": "The id of the item.",
     "theNameOfTheItem": "The name of the item.",
@@ -819,5 +815,9 @@
     "wipeDetected": "Wipe byl detekován!",
     "yield": "Úrodnost",
     "youAreAlreadyLeader": "Už jsi vůdce.",
-    "youAreNotPairedWithServer": "Příkaz na vůdce nefunguje, protože nejsi spárován se serverem."
+    "youAreNotPairedWithServer": "Příkaz na vůdce nefunguje, protože nejsi spárován se serverem.",
+    "teamsListTitle": "Team Roster - {server}",
+    "teamsActive": "Current Team",
+    "teamsInactive": "Former Teammates",
+    "teamsNone": "No teammates recorded yet."
 }

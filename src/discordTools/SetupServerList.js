@@ -35,9 +35,12 @@ module.exports = async (client, guild) => {
     }
 
     for (const serverId in instance.serverList) {
-        instance.serverList[serverId].passthroughMessageId = null;
+        if (instance.serverList[serverId].hasOwnProperty('passthroughMessageId')) {
+            delete instance.serverList[serverId].passthroughMessageId;
+        }
+        instance.serverList[serverId].teamsMessageId = null;
         await DiscordMessages.sendServerMessage(guild.id, serverId);
-        await DiscordMessages.sendPassthroughMessage(guild.id, serverId);
+        await DiscordMessages.sendTeamsMessage(guild.id, serverId);
     }
 
     client.setInstance(guild.id, instance);
