@@ -79,7 +79,8 @@ module.exports = {
                     Client.client.intlGet(null, 'couldNotFindChannel', { channel: channelId }), 'error');
             }
 
-            if (channel && channel.type === Discord.ChannelType.GuildText) {
+            if (channel && (channel.type === Discord.ChannelType.GuildText ||
+                channel.type === Discord.ChannelType.GuildAnnouncement)) {
                 return channel;
             }
         }
@@ -99,7 +100,8 @@ module.exports = {
                     Client.client.intlGet(null, 'couldNotFindChannel', { channel: name }), 'error');
             }
 
-            if (channel && channel.type === Discord.ChannelType.GuildText) {
+            if (channel && (channel.type === Discord.ChannelType.GuildText ||
+                channel.type === Discord.ChannelType.GuildAnnouncement)) {
                 return channel;
             }
         }
@@ -224,7 +226,7 @@ module.exports = {
             try {
                 return await guild.channels.create({
                     name: name,
-                    type: Discord.ChannelType.GuildText,
+                    type: Discord.ChannelType.GuildAnnouncement,
                     permissionOverwrites: [{
                         id: guild.roles.everyone.id,
                         deny: [Discord.PermissionFlagsBits.SendMessages]
