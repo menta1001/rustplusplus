@@ -34,6 +34,7 @@ module.exports = {
             client.intlGet(guildId, 'commandSyntaxEvents'),
             client.intlGet(guildId, 'commandSyntaxHeli'),
             client.intlGet(guildId, 'commandSyntaxBradley'),
+            'bradley',
             client.intlGet(guildId, 'commandSyntaxLarge'),
             client.intlGet(guildId, 'commandSyntaxLeader'),
             client.intlGet(guildId, 'commandSyntaxMarker'),

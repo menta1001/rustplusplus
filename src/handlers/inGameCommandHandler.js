@@ -22,6 +22,16 @@ const SmartAlarmHandler = require('./smartAlarmHandler.js');
 const SmartSwitchGroupHandler = require('./smartSwitchGroupHandler.js');
 const SmartSwitchHandler = require('./smartSwitchHandler.js');
 
+function isBradleyCommand(commandLowerCase, prefix, client, guildId) {
+    const commands = new Set([
+        `${prefix}${client.intlGet('en', 'commandSyntaxBradley')}`,
+        `${prefix}${client.intlGet(guildId, 'commandSyntaxBradley')}`,
+        `${prefix}bradley`
+    ]);
+
+    return commands.has(commandLowerCase);
+}
+
 module.exports = {
     inGameCommandHandler: async function (rustplus, client, message) {
         const guildId = rustplus.guildId;
@@ -91,8 +101,7 @@ module.exports = {
             commandLowerCase === `${prefix}${client.intlGet(guildId, 'commandSyntaxHeli')}`) {
             rustplus.sendInGameMessage(rustplus.getCommandHeli());
         }
-        else if (commandLowerCase === `${prefix}${client.intlGet('en', 'commandSyntaxBradley')}` ||
-            commandLowerCase === `${prefix}${client.intlGet(guildId, 'commandSyntaxBradley')}`) {
+        else if (isBradleyCommand(commandLowerCase, prefix, client, guildId)) {
             rustplus.sendInGameMessage(rustplus.getCommandBradly());
         }
         else if (commandLowerCase === `${prefix}${client.intlGet('en', 'commandSyntaxLarge')}` ||

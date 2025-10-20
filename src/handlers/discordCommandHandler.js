@@ -21,6 +21,16 @@
 const DiscordMessages = require('../discordTools/discordMessages.js');
 const DiscordTools = require('../discordTools/discordTools');
 
+function isBradleyCommand(commandLowerCase, prefix, client, guildId) {
+    const commands = new Set([
+        `${prefix}${client.intlGet('en', 'commandSyntaxBradley')}`,
+        `${prefix}${client.intlGet(guildId, 'commandSyntaxBradley')}`,
+        `${prefix}bradley`
+    ]);
+
+    return commands.has(commandLowerCase);
+}
+
 module.exports = {
     discordCommandHandler: async function (rustplus, client, message) {
         const guildId = rustplus.guildId;
@@ -84,8 +94,7 @@ module.exports = {
             commandLowerCase === `${prefix}${client.intlGet(guildId, 'commandSyntaxHeli')}`) {
             response = rustplus.getCommandHeli();
         }
-        else if (commandLowerCase === `${prefix}${client.intlGet('en', 'commandSyntaxBradley')}` ||
-            commandLowerCase === `${prefix}${client.intlGet(guildId, 'commandSyntaxBradley')}`) {
+        else if (isBradleyCommand(commandLowerCase, prefix, client, guildId)) {
             response = rustplus.getCommandBradly();
         }
         else if (commandLowerCase === `${prefix}${client.intlGet('en', 'commandSyntaxLarge')}` ||
