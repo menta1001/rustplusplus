@@ -81,6 +81,7 @@ class RustPlus extends RustPlusLib {
         this.smartAlarmIntervalCounter = 20;        /* Counter to decide when smart alarms should be updated */
         this.interactionSwitches = [];              /* Stores the ids of smart switches that are interacted in-game. */
         this.messagesSentByBot = [];                /* Stores the last messages sent by the bot to the team chat */
+        this.lastTeamChatMessage = null;            /* Stores the last processed team chat message to prevent duplicates */
 
         /* Chat handler variables */
         this.inGameChatQueue = [];
