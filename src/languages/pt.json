@@ -344,6 +344,8 @@
     "customCommand": "Comando Personalizado",
     "customTimerEditCargoShipEgressLabel": "Tempo de saída do Navio de Carga (segundos):",
     "customTimerEditBradleyRespawnLabel": "Tempo de renascimento do Bradley (segundos):",
+    "customTimerEditBradleyCrateUnlockLabel": "Bradley crate unlock time (seconds):",
+    "customTimerEditBradleyScrapableLabel": "Bradley scrapable time (seconds):",
     "customTimerEditCrateOilRigUnlockLabel": "Tempo de desbloqueio Caixa da Oil (segundo):",
     "customTimerEditDesc": "A editar os temporizadores personalizados",
     "customTimersCap": "TEMPORIZADORES PERSONALIZADOS",
@@ -831,7 +833,11 @@
     "bradleyActiveFor": "Bradley APC has likely been active for {time}.",
     "bradleyRespawnedShort": "Active",
     "bradleyRespawned": "Bradley APC should now be active.",
+    "bradleyCratesLootableNow": "Bradley APC crates at {location} should now be lootable. Last destroyed {time} ago.",
+    "bradleyScrapableNow": "Bradley APC wreck at {location} should now be scrapable. Last destroyed {time} ago.",
     "bradleyNoData": "No Bradley APC activity recorded yet.",
     "bradleyApcDestroyedSetting": "When Bradley APC is destroyed, send a notification.",
-    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification."
+    "bradleyApcRespawnSetting": "When Bradley APC respawns, send a notification.",
+    "bradleyCratesLootableSetting": "When Bradley APC crates become lootable, send a notification.",
+    "bradleyApcScrapableSetting": "When Bradley APC wreck becomes scrapable, send a notification."
 }
