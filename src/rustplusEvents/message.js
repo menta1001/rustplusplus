@@ -95,32 +95,23 @@ async function messageBroadcastTeamMessage(rustplus, client, message) {
     message.broadcast.teamMessage.message.message = tempMessage;
 
     const sanitizedMessage = message.broadcast.teamMessage.message.message;
-    const normalizedSanitizedMessage = sanitizedMessage.trim();
     const lastMessage = rustplus.lastTeamChatMessage;
-    const lastRawMessage = lastMessage?.rawMessage ?? lastMessage?.message ?? '';
-    const lastNormalizedMessage = lastMessage?.message ?? lastRawMessage.trim();
     const now = Date.now();
     const isDuplicateTeamMessage = lastMessage &&
         lastMessage.steamId === steamId &&
-        (lastRawMessage === sanitizedMessage ||
-            lastNormalizedMessage === normalizedSanitizedMessage) &&
+        lastMessage.message === sanitizedMessage &&
         (now - lastMessage.timestamp) < DUPLICATE_TEAM_MESSAGE_WINDOW_MS;
 
     rustplus.lastTeamChatMessage = {
         steamId: steamId,
-        message: normalizedSanitizedMessage,
-        rawMessage: sanitizedMessage,
+        message: sanitizedMessage,
         timestamp: now
     };
 
-    const botSentMessage = rustplus.messagesSentByBot.some(sentMessage =>
-        sentMessage === sanitizedMessage || sentMessage === normalizedSanitizedMessage);
-
-    if (botSentMessage) {
+    if (rustplus.messagesSentByBot.includes(sanitizedMessage)) {
         /* Remove message from messagesSendByBot */
         for (let i = rustplus.messagesSentByBot.length - 1; i >= 0; i--) {
-            const sentMessage = rustplus.messagesSentByBot[i];
-            if (sentMessage === sanitizedMessage || sentMessage === normalizedSanitizedMessage) {
+            if (rustplus.messagesSentByBot[i] === sanitizedMessage) {
                 rustplus.messagesSentByBot.splice(i, 1);
             }
         }
