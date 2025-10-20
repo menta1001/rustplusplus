@@ -172,47 +172,6 @@ module.exports = {
         let instance = Client.client.getInstance(guildId);
         const entity = instance.serverList[serverId].storageMonitors[entityId];
 
-        const rustplus = Client.client.rustplusInstances[guildId];
-
-        if (entity.reachable && rustplus) {
-            const hasMonitorData = rustplus.storageMonitors &&
-                rustplus.storageMonitors.hasOwnProperty(entityId) &&
-                rustplus.storageMonitors[entityId] &&
-                typeof rustplus.storageMonitors[entityId].capacity !== 'undefined';
-
-            if (!hasMonitorData) {
-                const info = await rustplus.getEntityInfoAsync(entityId);
-
-                if (await rustplus.isResponseValid(info)) {
-                    rustplus.storageMonitors[entityId] = {
-                        items: info.entityInfo.payload.items,
-                        expiry: info.entityInfo.payload.protectionExpiry,
-                        capacity: info.entityInfo.payload.capacity,
-                        hasProtection: info.entityInfo.payload.hasProtection
-                    };
-
-                    if (info.entityInfo.payload.capacity !== 0) {
-                        if (info.entityInfo.payload.capacity === Constants.STORAGE_MONITOR_TOOL_CUPBOARD_CAPACITY) {
-                            entity.type = 'toolCupboard';
-                            entity.decaying = info.entityInfo.payload.protectionExpiry === 0;
-                        }
-                        else if (info.entityInfo.payload.capacity === Constants.STORAGE_MONITOR_VENDING_MACHINE_CAPACITY) {
-                            entity.type = 'vendingMachine';
-                        }
-                        else if (info.entityInfo.payload.capacity === Constants.STORAGE_MONITOR_LARGE_WOOD_BOX_CAPACITY) {
-                            entity.type = 'largeWoodBox';
-                        }
-
-                        Client.client.setInstance(guildId, instance);
-                    }
-                }
-                else {
-                    entity.reachable = false;
-                    Client.client.setInstance(guildId, instance);
-                }
-            }
-        }
-
         const content = {
             embeds: [entity.reachable ?
                 DiscordEmbeds.getStorageMonitorEmbed(guildId, serverId, entityId) :
