@@ -18,7 +18,7 @@
 
 */
 
-const DiscordMessages = require('../discordTools/discordMessages.js');
+const scheduleRustplusReconnect = require('../util/scheduleRustplusReconnect');
 
 module.exports = {
     name: 'error',
@@ -27,22 +27,28 @@ module.exports = {
 
         rustplus.log(client.intlGet(null, 'errorCap'), err, 'error');
 
+        let shouldScheduleReconnect = false;
+
         switch (err.code) {
             case 'ETIMEDOUT': {
-                errorTimedOut(rustplus, client, err);
+                shouldScheduleReconnect = errorTimedOut(rustplus, client, err);
             } break;
 
             case 'ENOTFOUND': {
-                errorNotFound(rustplus, client, err);
+                shouldScheduleReconnect = errorNotFound(rustplus, client, err);
             } break;
 
             case 'ECONNREFUSED': {
-                await errorConnRefused(rustplus, client, err);
+                shouldScheduleReconnect = errorConnRefused(rustplus, client, err);
             } break;
 
             default: {
-                errorOther(rustplus, client, err);
+                shouldScheduleReconnect = errorOther(rustplus, client, err);
             } break;
+        }
+
+        if (shouldScheduleReconnect) {
+            await scheduleRustplusReconnect(rustplus, client);
         }
     },
 };
@@ -52,7 +58,9 @@ function errorTimedOut(rustplus, client, err) {
         rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'couldNotConnectTo', {
             id: rustplus.serverId
         }), 'error');
+        return true;
     }
+    return false;
 }
 
 function errorNotFound(rustplus, client, err) {
@@ -60,18 +68,23 @@ function errorNotFound(rustplus, client, err) {
         rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'couldNotConnectTo', {
             id: rustplus.serverId
         }), 'error');
+        return true;
     }
+    return false;
 }
 
-async function errorConnRefused(rustplus, client, err) {
+function errorConnRefused(rustplus, client, err) {
     rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'connectionRefusedTo', {
         id: rustplus.serverId
     }), 'error');
+    return true;
 }
 
 function errorOther(rustplus, client, err) {
     if (err.toString() === 'Error: WebSocket was closed before the connection was established') {
         rustplus.log(client.intlGet(null, 'errorCap'),
             client.intlGet(null, 'websocketClosedBeforeConnection'), 'error');
+        return true;
     }
+    return false;
 }
