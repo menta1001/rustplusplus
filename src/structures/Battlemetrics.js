@@ -35,6 +35,22 @@ const BATTLEMETRICS_AXIOS_OPTIONS = {
     validateStatus: () => true,
 };
 
+const BATTLEMETRICS_MAX_RETRIES = 3;
+const BATTLEMETRICS_RETRY_BASE_DELAY_MS = 2000;
+const RETRYABLE_ERROR_CODES = new Set([
+    'ECONNABORTED',
+    'ECONNRESET',
+    'ECONNREFUSED',
+    'ETIMEDOUT',
+    'EHOSTUNREACH',
+    'ENETDOWN',
+    'ENETRESET',
+    'ENOTFOUND',
+    'EPIPE',
+    'EAI_AGAIN',
+    'ERR_NETWORK',
+]);
+
 if (Config.battlemetrics && Config.battlemetrics.apiKey) {
     BATTLEMETRICS_AXIOS_OPTIONS.headers['Authorization'] = `Bearer ${Config.battlemetrics.apiKey}`;
 }
@@ -232,7 +248,108 @@ class Battlemetrics {
      *  @return {object} The response from Axios library.
      */
     async #request(api_call) {
+        let attempt = 0;
+        let delayMs = BATTLEMETRICS_RETRY_BASE_DELAY_MS;
+        let lastError = null;
+        let lastResponse = null;
+
+        while (attempt < BATTLEMETRICS_MAX_RETRIES) {
+            attempt += 1;
+
+            try {
+                const response = await Axios.get(api_call, BATTLEMETRICS_AXIOS_OPTIONS);
+
+                if (!this.#shouldRetryResponse(response)) {
+                    return response;
+                }
+
+                lastResponse = response;
+            }
+            catch (error) {
+                if (!this.#shouldRetryError(error)) {
+                    throw error;
+                }
+
+                lastError = error;
+            }
+
+            if (attempt >= BATTLEMETRICS_MAX_RETRIES) {
+                break;
+            }
+
+            const retryDelay = this.#getRetryDelayMs(lastResponse, lastError, delayMs);
+            await this.#delay(retryDelay);
+            delayMs *= 2;
+
+            lastError = null;
+        }
+
+        if (lastResponse) return lastResponse;
+        if (lastError) throw lastError;
+
         return await Axios.get(api_call, BATTLEMETRICS_AXIOS_OPTIONS);
+    }
+
+    #shouldRetryResponse(response) {
+        if (!response || typeof response.status !== 'number') return false;
+        if (response.status === 429) return true;
+        if (response.status === 408 || response.status === 425) return true;
+        if (response.status >= 500 && response.status < 600) return true;
+        return false;
+    }
+
+    #shouldRetryError(error) {
+        if (!error) return false;
+
+        if (error.response) {
+            return this.#shouldRetryResponse(error.response);
+        }
+
+        const code = typeof error.code === 'string' ? error.code : null;
+        if (code && RETRYABLE_ERROR_CODES.has(code)) return true;
+
+        return false;
+    }
+
+    #getRetryDelayMs(response, error, fallback) {
+        if (response && response.headers && response.headers['retry-after']) {
+            const retryAfter = this.#parseRetryAfterHeader(response.headers['retry-after']);
+            if (retryAfter !== null) return retryAfter;
+        }
+
+        if (error && error.response && error.response.headers && error.response.headers['retry-after']) {
+            const retryAfter = this.#parseRetryAfterHeader(error.response.headers['retry-after']);
+            if (retryAfter !== null) return retryAfter;
+        }
+
+        return fallback;
+    }
+
+    #parseRetryAfterHeader(value) {
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return Math.max(0, value) * 1000;
+        }
+
+        if (typeof value === 'string') {
+            const numeric = Number(value);
+            if (Number.isFinite(numeric)) {
+                return Math.max(0, numeric) * 1000;
+            }
+
+            const date = Date.parse(value);
+            if (!Number.isNaN(date)) {
+                const diff = date - Date.now();
+                if (diff > 0) return diff;
+            }
+        }
+
+        return null;
+    }
+
+    async #delay(ms) {
+        const parsed = Number(ms);
+        const timeout = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+        await new Promise((resolve) => setTimeout(resolve, timeout));
     }
 
     #logRequestFailure(api_call, failure) {
