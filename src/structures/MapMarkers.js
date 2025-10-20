@@ -78,45 +78,9 @@ class MapMarkers {
 
         /* Bradley tracking */
         this.bradleyCrates = [];
-        this.launchSiteMonument = this.findLaunchSiteMonument();
+        this.launchSiteMonument = this.rustplus.map.monuments.find(monument => monument.token === 'launchsite') || null;
 
         this.updateMapMarkers(mapMarkers);
-    }
-
-    findLaunchSiteMonument() {
-        if (!this.rustplus.map || !Array.isArray(this.rustplus.map.monuments)) {
-            return null;
-        }
-
-        const monuments = this.rustplus.map.monuments;
-        const preferredTokens = [
-            'launchsite',
-            'launchsite_display_name',
-            'launch_site',
-            'launch_site_display_name',
-            'rocket_factory_display_name',
-            'rocket_factory'
-        ];
-
-        for (const token of preferredTokens) {
-            const match = monuments.find(monument =>
-                typeof monument.token === 'string' && monument.token.toLowerCase() === token
-            );
-            if (match) return match;
-        }
-
-        const launchSiteMatch = monuments.find(monument => {
-            if (!monument.token) return false;
-            const lowered = monument.token.toLowerCase();
-            return lowered.includes('launch') && lowered.includes('site');
-        });
-        if (launchSiteMatch) return launchSiteMatch;
-
-        const rocketFactoryMatch = monuments.find(monument => {
-            if (!monument.token) return false;
-            return monument.token.toLowerCase().includes('rocket_factory');
-        });
-        return rocketFactoryMatch || null;
     }
 
     /* Getters and Setters */
@@ -652,10 +616,6 @@ class MapMarkers {
     }
 
     updateCrates(mapMarkers) {
-        if (!this.launchSiteMonument) {
-            this.launchSiteMonument = this.findLaunchSiteMonument();
-        }
-
         let newMarkers = this.getNewMarkersOfTypeId(this.types.Crate, mapMarkers.markers);
         let leftMarkers = this.getLeftMarkersOfTypeId(this.types.Crate, mapMarkers.markers);
         let remainingMarkers = this.getRemainingMarkersOfTypeId(this.types.Crate, mapMarkers.markers);
