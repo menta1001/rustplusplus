@@ -1294,10 +1294,17 @@ class RustPlus extends RustPlusLib {
         const commandChinookEn = `${Client.client.intlGet('en', 'commandSyntaxChinook')}`;
         const commandBradly = `${Client.client.intlGet(this.guildId, 'commandSyntaxBradley')}`;
         const commandBradlyEn = `${Client.client.intlGet('en', 'commandSyntaxBradley')}`;
+        const bradleyEventAliases = new Set([
+            commandBradly.toLowerCase(),
+            commandBradlyEn.toLowerCase(),
+            'bradley'
+        ]);
 
-        const EVENTS = [commandCargo, commandCargoEn, commandHeli, commandHeliEn, commandSmall,
+        const eventOptions = [commandCargo, commandCargoEn, commandHeli, commandHeliEn, commandSmall,
             commandSmallEn, commandLarge, commandLargeEn, commandChinook, commandChinookEn,
-            commandBradly, commandBradlyEn];
+            commandBradly, commandBradlyEn].map(eventName => eventName.toLowerCase());
+
+        const EVENTS = new Set([...eventOptions, ...bradleyEventAliases]);
 
         if (command.toLowerCase().startsWith(`${commandEvents}`)) {
             command = command.slice(`${commandEvents}`.length).trim();
@@ -1313,7 +1320,7 @@ class RustPlus extends RustPlusLib {
             event = 'all';
             number = 5;
         }
-        else if (event !== '' && EVENTS.includes(event)) {
+        else if (event !== '' && EVENTS.has(event)) {
             if (number === '') {
                 number = 5;
             }
@@ -1324,7 +1331,7 @@ class RustPlus extends RustPlusLib {
                 }
             }
         }
-        else if (event !== '' && !EVENTS.includes(event)) {
+        else if (event !== '' && !EVENTS.has(event)) {
             number = parseInt(event);
             event = 'all';
             if (isNaN(number)) {
@@ -1364,6 +1371,10 @@ class RustPlus extends RustPlusLib {
 
             case commandBradlyEn:
             case commandBradly: {
+                event = 'bradly';
+            } break;
+
+            case 'bradley': {
                 event = 'bradly';
             } break;
 
