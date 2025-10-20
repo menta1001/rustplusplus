@@ -366,6 +366,8 @@ module.exports = {
         const instance = Client.client.getInstance(guildId);
         const entity = instance.serverList[serverId].storageMonitors[entityId];
         const rustplus = Client.client.rustplusInstances[guildId];
+        const storageMonitor = rustplus && rustplus.storageMonitors ?
+            rustplus.storageMonitors[entityId] : null;
         const grid = entity.location !== null ? ` (${entity.location})` : '';
 
         let description = `**ID** \`${entityId}\``;
@@ -381,7 +383,32 @@ module.exports = {
             });
         }
 
-        if (rustplus && rustplus.storageMonitors[entityId].capacity === 0) {
+        if (!storageMonitor) {
+            return module.exports.getEmbed({
+                title: `${entity.name}${grid}`,
+                color: Constants.COLOR_DEFAULT,
+                description: `${description}\n${Client.client.intlGet(guildId, 'statusNotElectronicallyConnected')}`,
+                thumbnail: `attachment://${entity.image}`,
+                footer: { text: `${entity.server}` },
+                timestamp: true
+            });
+        }
+
+        const hasCapacity = typeof storageMonitor.capacity === 'number';
+        const hasItems = Array.isArray(storageMonitor.items);
+
+        if (!hasCapacity || !hasItems) {
+            return module.exports.getEmbed({
+                title: `${entity.name}${grid}`,
+                color: Constants.COLOR_DEFAULT,
+                description: `${description}\n${Client.client.intlGet(guildId, 'statusNotElectronicallyConnected')}`,
+                thumbnail: `attachment://${entity.image}`,
+                footer: { text: `${entity.server}` },
+                timestamp: true
+            });
+        }
+
+        if (storageMonitor.capacity === 0) {
             return module.exports.getEmbed({
                 title: `${entity.name}${grid}`,
                 color: Constants.COLOR_DEFAULT,
@@ -397,9 +424,9 @@ module.exports = {
             `\`${entity.type !== null ? Client.client.intlGet(guildId, entity.type) :
                 Client.client.intlGet(guildId, 'unknown')}\``;
 
-        const items = rustplus.storageMonitors[entityId].items;
-        const expiry = rustplus.storageMonitors[entityId].expiry;
-        const capacity = rustplus.storageMonitors[entityId].capacity;
+        const items = storageMonitor.items;
+        const expiry = storageMonitor.expiry || 0;
+        const capacity = storageMonitor.capacity;
 
         description += `\n**${Client.client.intlGet(guildId, 'slots')}** `;
         description += `\`(${items.length}/${capacity})\``
