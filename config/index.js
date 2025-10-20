@@ -25,6 +25,9 @@ module.exports = {
         showCallStackError: process.env.RPP_LOG_CALL_STACK || false,
         reconnectIntervalMs: process.env.RPP_RECONNECT_INTERVAL || 15000,
     },
+    battlemetrics: {
+        apiKey: process.env.RPP_BATTLEMETRICS_API_KEY || process.env.BATTLEMETRICS_API_KEY || '',
+    },
     discord: {
         username: process.env.RPP_DISCORD_USERNAME || 'rustplusplus',
         clientId: process.env.RPP_DISCORD_CLIENT_ID || '',

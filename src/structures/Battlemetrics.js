@@ -21,8 +21,23 @@
 const Axios = require('axios');
 
 const Client = require('../../index.ts');
+const Config = require('../../config');
+const PackageJson = require('../../package.json');
 const RandomUsernames = require('../staticFiles/RandomUsernames.json');
-const Utils = require = require('../util/utils.js');
+const Utils = require('../util/utils.js');
+
+const BATTLEMETRICS_AXIOS_OPTIONS = {
+    headers: {
+        'Accept': 'application/vnd.api+json',
+        'User-Agent': `rustplusplus/${PackageJson.version}`,
+    },
+    timeout: 15000,
+    validateStatus: () => true,
+};
+
+if (Config.battlemetrics && Config.battlemetrics.apiKey) {
+    BATTLEMETRICS_AXIOS_OPTIONS.headers['Authorization'] = `Bearer ${Config.battlemetrics.apiKey}`;
+}
 
 const SERVER_LOG_SIZE = 1000;
 const CONNECTION_LOG_SIZE = 1000;
@@ -217,12 +232,87 @@ class Battlemetrics {
      *  @return {object} The response from Axios library.
      */
     async #request(api_call) {
-        try {
-            return await Axios.get(api_call);
+        return await Axios.get(api_call, BATTLEMETRICS_AXIOS_OPTIONS);
+    }
+
+    #logRequestFailure(api_call, failure) {
+        if (!Client || !Client.client || typeof Client.client.log !== 'function') return;
+
+        const baseMessage = Client.client.intlGet(null, 'battlemetricsApiRequestFailed', { api_call: api_call });
+        const segments = [];
+
+        const source = failure && failure.response ? failure.response
+            : (failure && typeof failure.status === 'number' ? failure : null);
+
+        if (source && typeof source.status === 'number') {
+            segments.push(`status ${source.status}`);
         }
-        catch (e) {
-            return {};
+
+        if (source && source.statusText) {
+            const statusText = Utils.removeInvisibleCharacters(source.statusText);
+            if (statusText !== '') segments.push(statusText);
         }
+
+        if (source && source.headers && source.headers['retry-after']) {
+            segments.push(`retry-after ${source.headers['retry-after']}`);
+        }
+
+        const payload = source ? source.data : (failure && failure.data ? failure.data : null);
+        const details = this.#extractErrorMessages(payload);
+        if (details.length > 0) {
+            segments.push(details.join(' | '));
+        }
+        else if (!source && failure) {
+            if (failure.code) {
+                const code = Utils.removeInvisibleCharacters(failure.code);
+                if (code !== '') segments.push(code);
+            }
+
+            if (failure.message) {
+                const message = Utils.removeInvisibleCharacters(failure.message);
+                if (message !== '') segments.push(message);
+            }
+        }
+
+        const logMessage = segments.length > 0 ? `${baseMessage} (${segments.join(' - ')})` : baseMessage;
+        Client.client.log(Client.client.intlGet(null, 'errorCap'), logMessage, 'error');
+    }
+
+    #extractErrorMessages(payload) {
+        const messages = [];
+
+        if (!payload) return messages;
+
+        if (Array.isArray(payload.errors)) {
+            for (const error of payload.errors) {
+                if (!error) continue;
+                const detail = error.detail || error.title || error.code;
+                if (!detail) continue;
+
+                const sanitized = Utils.removeInvisibleCharacters(detail);
+                if (sanitized !== '') messages.push(sanitized);
+            }
+            return messages;
+        }
+
+        if (typeof payload === 'string') {
+            const sanitized = Utils.removeInvisibleCharacters(payload);
+            if (sanitized !== '') messages.push(sanitized);
+            return messages;
+        }
+
+        if (typeof payload === 'object') {
+            if (typeof payload.message === 'string') {
+                const sanitized = Utils.removeInvisibleCharacters(payload.message);
+                if (sanitized !== '') messages.push(sanitized);
+            }
+            if (typeof payload.error === 'string') {
+                const sanitized = Utils.removeInvisibleCharacters(payload.error);
+                if (sanitized !== '') messages.push(sanitized);
+            }
+        }
+
+        return messages;
     }
 
     /**
@@ -381,11 +471,17 @@ class Battlemetrics {
     async request(api_call) {
         if (this.id === null) return null;
 
-        const response = await this.#request(api_call);
+        let response;
+        try {
+            response = await this.#request(api_call);
+        }
+        catch (error) {
+            this.#logRequestFailure(api_call, error);
+            return null;
+        }
 
-        if (response.status !== 200) {
-            Client.client.log(Client.client.intlGet(null, 'errorCap'),
-                Client.client.intlGet(null, 'battlemetricsApiRequestFailed', { api_call: api_call }), 'error');
+        if (!response || response.status !== 200) {
+            this.#logRequestFailure(api_call, response);
             return null;
         }
 
@@ -440,11 +536,17 @@ class Battlemetrics {
         const originalName = name;
         name = encodeURI(name).replace('\#', '\*');
         const search = this.SEARCH_SERVER_NAME_API_CALL(name);
-        const response = await this.#request(search);
+        let response;
+        try {
+            response = await this.#request(search);
+        }
+        catch (error) {
+            this.#logRequestFailure(search, error);
+            return null;
+        }
 
-        if (response.status !== 200) {
-            Client.client.log(Client.client.intlGet(null, 'errorCap'),
-                Client.client.intlGet(null, 'battlemetricsApiRequestFailed', { api_call: search }), 'error');
+        if (!response || response.status !== 200) {
+            this.#logRequestFailure(search, response);
             return null;
         }
 
