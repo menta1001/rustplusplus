@@ -52,6 +52,8 @@ module.exports = async (client, interaction) => {
         const cargoShipEgressTime = parseInt(interaction.fields.getTextInputValue('CargoShipEgressTime'));
         const oilRigCrateUnlockTime = parseInt(interaction.fields.getTextInputValue('OilRigCrateUnlockTime'));
         const bradleyRespawnTime = parseInt(interaction.fields.getTextInputValue('BradleyRespawnTime'));
+        const bradleyCrateUnlockTime = parseInt(interaction.fields.getTextInputValue('BradleyCrateUnlockTime'));
+        const bradleyScrapableTime = parseInt(interaction.fields.getTextInputValue('BradleyScrapableTime'));
 
         if (!server) {
             interaction.deferUpdate();
@@ -67,11 +69,17 @@ module.exports = async (client, interaction) => {
         if (bradleyRespawnTime && ((bradleyRespawnTime * 1000) !== server.bradleyRespawnTimeMs)) {
             server.bradleyRespawnTimeMs = bradleyRespawnTime * 1000;
         }
+        if (bradleyCrateUnlockTime && ((bradleyCrateUnlockTime * 1000) !== server.bradleyCrateUnlockTimeMs)) {
+            server.bradleyCrateUnlockTimeMs = bradleyCrateUnlockTime * 1000;
+        }
+        if (bradleyScrapableTime && ((bradleyScrapableTime * 1000) !== server.bradleyScrapableTimeMs)) {
+            server.bradleyScrapableTimeMs = bradleyScrapableTime * 1000;
+        }
         client.setInstance(guildId, instance);
 
         client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'modalValueChange', {
             id: `${verifyId}`,
-            value: `${server.cargoShipEgressTimeMs}, ${server.oilRigLockedCrateUnlockTimeMs}, ${server.bradleyRespawnTimeMs}`
+            value: `${server.cargoShipEgressTimeMs}, ${server.oilRigLockedCrateUnlockTimeMs}, ${server.bradleyRespawnTimeMs}, ${server.bradleyCrateUnlockTimeMs}, ${server.bradleyScrapableTimeMs}`
         }));
     }
     else if (interaction.customId.startsWith('TrademarkCustom')) {

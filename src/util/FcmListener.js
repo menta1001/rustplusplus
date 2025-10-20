@@ -285,6 +285,10 @@ async function pairingServer(client, guild, title, message, body) {
         oilRigLockedCrateUnlockTimeMs: server ? server.oilRigLockedCrateUnlockTimeMs :
             Constants.DEFAULT_OIL_RIG_LOCKED_CRATE_UNLOCK_TIME_MS,
         bradleyRespawnTimeMs: server ? server.bradleyRespawnTimeMs : Constants.DEFAULT_BRADLEY_RESPAWN_TIME_MS,
+        bradleyCrateUnlockTimeMs: server ? server.bradleyCrateUnlockTimeMs :
+            Constants.DEFAULT_BRADLEY_CRATE_UNLOCK_TIME_MS,
+        bradleyScrapableTimeMs: server ? server.bradleyScrapableTimeMs :
+            Constants.DEFAULT_BRADLEY_SCRAPABLE_TIME_MS,
         timeTillDay: server ? server.timeTillDay : null,
         timeTillNight: server ? server.timeTillNight : null,
         connectionCheckIntervalMinutes: server ? server.connectionCheckIntervalMinutes : 0

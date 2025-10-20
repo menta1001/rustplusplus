@@ -57,6 +57,8 @@ class MapMarkers {
         this.crateLargeOilRigTimer = null;
         this.crateLargeOilRigLocation = null;
         this.bradleyRespawnTimer = null;
+        this.bradleyCrateUnlockTimer = null;
+        this.bradleyScrapableTimer = null;
 
         /* Event dates */
         this.timeSinceCargoShipWasOut = null;
@@ -68,6 +70,8 @@ class MapMarkers {
         this.timeSinceTravelingVendorWasOnMap = null;
         this.timeSinceBradleyWasDestroyed = null;
         this.timeSinceBradleyRespawned = null;
+        this.timeSinceBradleyCratesLootable = null;
+        this.timeSinceBradleyScrapable = null;
 
         /* Event location */
         this.patrolHelicopterDestroyedLocation = null;
@@ -857,6 +861,8 @@ class MapMarkers {
         this.timeSinceBradleyWasDestroyed = new Date();
         this.bradleyDestroyedLocation = location;
         this.timeSinceBradleyRespawned = null;
+        this.timeSinceBradleyCratesLootable = null;
+        this.timeSinceBradleyScrapable = null;
 
         const respawnTimeMs = this.getBradleyRespawnTimeMs();
 
@@ -864,12 +870,40 @@ class MapMarkers {
             this.bradleyRespawnTimer.stop();
             this.bradleyRespawnTimer = null;
         }
+        if (this.bradleyCrateUnlockTimer) {
+            this.bradleyCrateUnlockTimer.stop();
+            this.bradleyCrateUnlockTimer = null;
+        }
+        if (this.bradleyScrapableTimer) {
+            this.bradleyScrapableTimer.stop();
+            this.bradleyScrapableTimer = null;
+        }
 
         this.bradleyRespawnTimer = new Timer.timer(
             this.notifyBradleyRespawn.bind(this),
             respawnTimeMs
         );
         this.bradleyRespawnTimer.start();
+
+        const crateUnlockTimeMs = this.getBradleyCrateUnlockTimeMs();
+        if (crateUnlockTimeMs > 0) {
+            this.bradleyCrateUnlockTimer = new Timer.timer(
+                this.notifyBradleyCratesLootable.bind(this),
+                crateUnlockTimeMs,
+                location
+            );
+            this.bradleyCrateUnlockTimer.start();
+        }
+
+        const scrapableTimeMs = this.getBradleyScrapableTimeMs();
+        if (scrapableTimeMs > 0) {
+            this.bradleyScrapableTimer = new Timer.timer(
+                this.notifyBradleyScrapable.bind(this),
+                scrapableTimeMs,
+                location
+            );
+            this.bradleyScrapableTimer.start();
+        }
 
         this.rustplus.sendEvent(
             this.rustplus.notificationSettings.bradleyApcDestroyedSetting,
@@ -881,7 +915,16 @@ class MapMarkers {
     }
 
     handleBradleyCratesCleared() {
-        /* Intentionally left blank - retained for future handling if needed. */
+        if (this.bradleyCrateUnlockTimer) {
+            this.bradleyCrateUnlockTimer.stop();
+            this.bradleyCrateUnlockTimer = null;
+        }
+        if (this.bradleyScrapableTimer) {
+            this.bradleyScrapableTimer.stop();
+            this.bradleyScrapableTimer = null;
+        }
+        this.timeSinceBradleyCratesLootable = null;
+        this.timeSinceBradleyScrapable = null;
     }
 
     getBradleyRespawnTimeMs() {
@@ -898,6 +941,34 @@ class MapMarkers {
         return respawnTimeMs;
     }
 
+    getBradleyCrateUnlockTimeMs() {
+        const instance = this.client.getInstance(this.rustplus.guildId);
+        if (!instance || !instance.serverList.hasOwnProperty(this.rustplus.serverId)) {
+            return Constants.DEFAULT_BRADLEY_CRATE_UNLOCK_TIME_MS;
+        }
+
+        const unlockTimeMs = instance.serverList[this.rustplus.serverId].bradleyCrateUnlockTimeMs;
+        if (!unlockTimeMs || isNaN(unlockTimeMs)) {
+            return Constants.DEFAULT_BRADLEY_CRATE_UNLOCK_TIME_MS;
+        }
+
+        return unlockTimeMs;
+    }
+
+    getBradleyScrapableTimeMs() {
+        const instance = this.client.getInstance(this.rustplus.guildId);
+        if (!instance || !instance.serverList.hasOwnProperty(this.rustplus.serverId)) {
+            return Constants.DEFAULT_BRADLEY_SCRAPABLE_TIME_MS;
+        }
+
+        const scrapableTimeMs = instance.serverList[this.rustplus.serverId].bradleyScrapableTimeMs;
+        if (!scrapableTimeMs || isNaN(scrapableTimeMs)) {
+            return Constants.DEFAULT_BRADLEY_SCRAPABLE_TIME_MS;
+        }
+
+        return scrapableTimeMs;
+    }
+
 
 
     /* Timer notification functions */
@@ -908,12 +979,68 @@ class MapMarkers {
             this.bradleyRespawnTimer.stop();
             this.bradleyRespawnTimer = null;
         }
+        if (this.bradleyCrateUnlockTimer) {
+            this.bradleyCrateUnlockTimer.stop();
+            this.bradleyCrateUnlockTimer = null;
+        }
+        if (this.bradleyScrapableTimer) {
+            this.bradleyScrapableTimer.stop();
+            this.bradleyScrapableTimer = null;
+        }
+        this.timeSinceBradleyCratesLootable = null;
+        this.timeSinceBradleyScrapable = null;
 
         this.rustplus.sendEvent(
             this.rustplus.notificationSettings.bradleyApcRespawnSetting,
             this.client.intlGet(this.rustplus.guildId, 'bradleyApcRespawned'),
             'bradly',
             Constants.COLOR_BRADLEY_APC_RESPAWNED,
+            this.rustplus.isFirstPoll
+        );
+    }
+
+    notifyBradleyCratesLootable(args) {
+        this.bradleyCrateUnlockTimer = null;
+        this.timeSinceBradleyCratesLootable = new Date();
+
+        const location = (args && args.length > 0 && args[0]) ? args[0] : this.bradleyDestroyedLocation;
+        const displayLocation = location ? location : this.client.intlGet(this.rustplus.guildId, 'unknown');
+        const destroyedAt = this.timeSinceBradleyWasDestroyed;
+        const timeSince = destroyedAt ?
+            Timer.secondsToFullScale((new Date() - destroyedAt) / 1000) :
+            this.client.intlGet(this.rustplus.guildId, 'unknown');
+
+        this.rustplus.sendEvent(
+            this.rustplus.notificationSettings.bradleyCratesLootableSetting,
+            this.client.intlGet(this.rustplus.guildId, 'bradleyCratesLootableNow', {
+                location: displayLocation,
+                time: timeSince
+            }),
+            'bradly',
+            Constants.COLOR_BRADLEY_APC_CRATES_LOOTABLE,
+            this.rustplus.isFirstPoll
+        );
+    }
+
+    notifyBradleyScrapable(args) {
+        this.bradleyScrapableTimer = null;
+        this.timeSinceBradleyScrapable = new Date();
+
+        const location = (args && args.length > 0 && args[0]) ? args[0] : this.bradleyDestroyedLocation;
+        const displayLocation = location ? location : this.client.intlGet(this.rustplus.guildId, 'unknown');
+        const destroyedAt = this.timeSinceBradleyWasDestroyed;
+        const timeSince = destroyedAt ?
+            Timer.secondsToFullScale((new Date() - destroyedAt) / 1000) :
+            this.client.intlGet(this.rustplus.guildId, 'unknown');
+
+        this.rustplus.sendEvent(
+            this.rustplus.notificationSettings.bradleyApcScrapableSetting,
+            this.client.intlGet(this.rustplus.guildId, 'bradleyScrapableNow', {
+                location: displayLocation,
+                time: timeSince
+            }),
+            'bradly',
+            Constants.COLOR_BRADLEY_APC_SCRAPABLE,
             this.rustplus.isFirstPoll
         );
     }
@@ -1017,6 +1144,14 @@ class MapMarkers {
             this.bradleyRespawnTimer.stop();
         }
         this.bradleyRespawnTimer = null;
+        if (this.bradleyCrateUnlockTimer) {
+            this.bradleyCrateUnlockTimer.stop();
+        }
+        this.bradleyCrateUnlockTimer = null;
+        if (this.bradleyScrapableTimer) {
+            this.bradleyScrapableTimer.stop();
+        }
+        this.bradleyScrapableTimer = null;
 
         this.timeSinceCargoShipWasOut = null;
         this.timeSinceCH47WasOut = null;
@@ -1027,6 +1162,8 @@ class MapMarkers {
         this.timeSinceTravelingVendorWasOnMap = null;
         this.timeSinceBradleyWasDestroyed = null;
         this.timeSinceBradleyRespawned = null;
+        this.timeSinceBradleyCratesLootable = null;
+        this.timeSinceBradleyScrapable = null;
 
         this.patrolHelicopterDestroyedLocation = null;
         this.bradleyDestroyedLocation = null;

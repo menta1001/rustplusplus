@@ -21,6 +21,7 @@
 const Fs = require('fs');
 const Path = require('path');
 
+const Constants = require('./constants.js');
 const InstanceUtils = require('../util/instanceUtils.js');
 
 module.exports = (client, guild) => {
@@ -224,6 +225,21 @@ module.exports = (client, guild) => {
         if (!content.hasOwnProperty('marketMessageId')) content.marketMessageId = null;
         if (!content.hasOwnProperty('customCameraGroups')) content.customCameraGroups = {};
         if (!content.hasOwnProperty('connectionCheckIntervalMinutes')) content.connectionCheckIntervalMinutes = 0;
+        if (!content.hasOwnProperty('cargoShipEgressTimeMs')) {
+            content.cargoShipEgressTimeMs = Constants.DEFAULT_CARGO_SHIP_EGRESS_TIME_MS;
+        }
+        if (!content.hasOwnProperty('oilRigLockedCrateUnlockTimeMs')) {
+            content.oilRigLockedCrateUnlockTimeMs = Constants.DEFAULT_OIL_RIG_LOCKED_CRATE_UNLOCK_TIME_MS;
+        }
+        if (!content.hasOwnProperty('bradleyRespawnTimeMs')) {
+            content.bradleyRespawnTimeMs = Constants.DEFAULT_BRADLEY_RESPAWN_TIME_MS;
+        }
+        if (!content.hasOwnProperty('bradleyCrateUnlockTimeMs')) {
+            content.bradleyCrateUnlockTimeMs = Constants.DEFAULT_BRADLEY_CRATE_UNLOCK_TIME_MS;
+        }
+        if (!content.hasOwnProperty('bradleyScrapableTimeMs')) {
+            content.bradleyScrapableTimeMs = Constants.DEFAULT_BRADLEY_SCRAPABLE_TIME_MS;
+        }
     }
 
     client.setInstance(guild.id, instance);
