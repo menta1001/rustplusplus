@@ -39,6 +39,23 @@ if (Config.battlemetrics && Config.battlemetrics.apiKey) {
     BATTLEMETRICS_AXIOS_OPTIONS.headers['Authorization'] = `Bearer ${Config.battlemetrics.apiKey}`;
 }
 
+const BATTLEMETRICS_REQUEST_TIMEOUT = typeof BATTLEMETRICS_AXIOS_OPTIONS.timeout === 'number'
+    ? BATTLEMETRICS_AXIOS_OPTIONS.timeout
+    : 15000;
+const BATTLEMETRICS_MAX_REQUEST_ATTEMPTS = 3;
+const BATTLEMETRICS_MAX_TIMEOUT = 60000;
+const BATTLEMETRICS_RETRY_BASE_DELAY_MS = 1000;
+const RETRYABLE_ERROR_CODES = new Set([
+    'ETIMEDOUT',
+    'ECONNABORTED',
+    'ECONNRESET',
+    'ENETDOWN',
+    'ENETRESET',
+    'ENETUNREACH',
+    'EPIPE',
+    'EAI_AGAIN',
+]);
+
 const SERVER_LOG_SIZE = 1000;
 const CONNECTION_LOG_SIZE = 1000;
 const PLAYER_CONNECTION_LOG_SIZE = 100;
@@ -232,7 +249,30 @@ class Battlemetrics {
      *  @return {object} The response from Axios library.
      */
     async #request(api_call) {
-        return await Axios.get(api_call, BATTLEMETRICS_AXIOS_OPTIONS);
+        let attempt = 1;
+        let failure = null;
+
+        while (attempt <= BATTLEMETRICS_MAX_REQUEST_ATTEMPTS) {
+            const requestTimeout = this.#getRequestTimeout(attempt);
+            const options = { ...BATTLEMETRICS_AXIOS_OPTIONS, timeout: requestTimeout };
+
+            try {
+                return await Axios.get(api_call, options);
+            }
+            catch (error) {
+                failure = error;
+
+                if (attempt >= BATTLEMETRICS_MAX_REQUEST_ATTEMPTS || !this.#shouldRetryRequest(error)) {
+                    throw error;
+                }
+
+                const delay = this.#getRetryDelayMs(attempt, error);
+                await this.#wait(delay);
+                attempt += 1;
+            }
+        }
+
+        throw failure;
     }
 
     #logRequestFailure(api_call, failure) {
@@ -276,6 +316,66 @@ class Battlemetrics {
 
         const logMessage = segments.length > 0 ? `${baseMessage} (${segments.join(' - ')})` : baseMessage;
         Client.client.log(Client.client.intlGet(null, 'errorCap'), logMessage, 'error');
+    }
+
+    #shouldRetryRequest(error) {
+        if (!error) return false;
+
+        if (error.response && typeof error.response.status === 'number') {
+            const status = error.response.status;
+
+            if (status === 408 || status === 425 || status === 429) return true;
+            if (status >= 500 && status !== 501 && status !== 505) return true;
+        }
+
+        if (error.code && RETRYABLE_ERROR_CODES.has(error.code)) return true;
+
+        return false;
+    }
+
+    #getRequestTimeout(attempt) {
+        if (!Number.isFinite(attempt) || attempt <= 1) return BATTLEMETRICS_REQUEST_TIMEOUT;
+
+        const timeout = BATTLEMETRICS_REQUEST_TIMEOUT * Math.pow(2, attempt - 1);
+        return Math.min(timeout, BATTLEMETRICS_MAX_TIMEOUT);
+    }
+
+    #getRetryDelayMs(attempt, error) {
+        const retryAfter = this.#parseRetryAfter(error);
+        if (Number.isFinite(retryAfter) && retryAfter >= 0) {
+            return retryAfter;
+        }
+
+        const delay = BATTLEMETRICS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+        return Math.min(delay, BATTLEMETRICS_MAX_TIMEOUT);
+    }
+
+    #parseRetryAfter(error) {
+        if (!error || !error.response || !error.response.headers) return null;
+
+        const header = error.response.headers['retry-after'];
+        if (!header) return null;
+
+        const numeric = Number.parseFloat(header);
+        if (Number.isFinite(numeric)) {
+            return numeric * 1000;
+        }
+
+        const date = new Date(header);
+        if (!Number.isNaN(date.getTime())) {
+            return Math.max(0, date.getTime() - Date.now());
+        }
+
+        return null;
+    }
+
+    async #wait(ms) {
+        const parsed = Number(ms);
+        const delay = Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+
+        if (delay === 0) return;
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
     }
 
     #extractErrorMessages(payload) {
