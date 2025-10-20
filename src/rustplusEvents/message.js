@@ -26,8 +26,6 @@ const SmartSwitchGroupHandler = require('../handlers/smartSwitchGroupHandler.js'
 const TeamChatHandler = require("../handlers/teamChatHandler.js");
 const TeamHandler = require('../handlers/teamHandler.js');
 
-const DUPLICATE_TEAM_MESSAGE_WINDOW_MS = 1000;
-
 module.exports = {
     name: 'message',
     async execute(rustplus, client, message) {
@@ -94,40 +92,22 @@ async function messageBroadcastTeamMessage(rustplus, client, message) {
     tempMessage = tempMessage.replace(/^<color.+?<\/color>/g, '');      /* Unknown */
     message.broadcast.teamMessage.message.message = tempMessage;
 
-    const sanitizedMessage = message.broadcast.teamMessage.message.message;
-    const lastMessage = rustplus.lastTeamChatMessage;
-    const now = Date.now();
-    const isDuplicateTeamMessage = lastMessage &&
-        lastMessage.steamId === steamId &&
-        lastMessage.message === sanitizedMessage &&
-        (now - lastMessage.timestamp) < DUPLICATE_TEAM_MESSAGE_WINDOW_MS;
-
-    rustplus.lastTeamChatMessage = {
-        steamId: steamId,
-        message: sanitizedMessage,
-        timestamp: now
-    };
-
-    if (rustplus.messagesSentByBot.includes(sanitizedMessage)) {
-        /* Remove message from messagesSendByBot */
-        for (let i = rustplus.messagesSentByBot.length - 1; i >= 0; i--) {
-            if (rustplus.messagesSentByBot[i] === sanitizedMessage) {
-                rustplus.messagesSentByBot.splice(i, 1);
-            }
-        }
-        return;
-    }
-
-    if (isDuplicateTeamMessage) {
-        return;
-    }
-
     if (instance.blacklist['steamIds'].includes(`${steamId}`)) {
         rustplus.log(client.intlGet(null, 'infoCap'), client.intlGet(null, `userPartOfBlacklistInGame`, {
             user: `${message.broadcast.teamMessage.message.name} (${steamId})`,
-            message: sanitizedMessage
+            message: message.broadcast.teamMessage.message.message
         }));
         TeamChatHandler(rustplus, client, message.broadcast.teamMessage.message);
+        return;
+    }
+
+    if (rustplus.messagesSentByBot.includes(message.broadcast.teamMessage.message.message)) {
+        /* Remove message from messagesSendByBot */
+        for (let i = rustplus.messagesSentByBot.length - 1; i >= 0; i--) {
+            if (rustplus.messagesSentByBot[i] === message.broadcast.teamMessage.message.message) {
+                rustplus.messagesSentByBot.splice(i, 1);
+            }
+        }
         return;
     }
 
@@ -135,7 +115,7 @@ async function messageBroadcastTeamMessage(rustplus, client, message) {
     if (isCommand) return;
 
     rustplus.log(client.intlGet(null, 'infoCap'), client.intlGet(null, `logInGameMessage`, {
-        message: sanitizedMessage,
+        message: message.broadcast.teamMessage.message.message,
         user: `${message.broadcast.teamMessage.message.name} (${steamId})`
     }));
 
