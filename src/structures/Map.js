@@ -154,6 +154,16 @@ class Map {
                 map: Client.client.intlGet(rustplus.guildId, 'launchSite').toUpperCase(),
                 radius: 250
             },
+            launch_site_display_name: {
+                clean: Client.client.intlGet(rustplus.guildId, 'launchSite'),
+                map: Client.client.intlGet(rustplus.guildId, 'launchSite').toUpperCase(),
+                radius: 250
+            },
+            rocket_factory_display_name: {
+                clean: Client.client.intlGet(rustplus.guildId, 'launchSite'),
+                map: Client.client.intlGet(rustplus.guildId, 'launchSite').toUpperCase(),
+                radius: 250
+            },
             lighthouse_display_name: {
                 clean: Client.client.intlGet(rustplus.guildId, 'lighthouse'),
                 map: Client.client.intlGet(rustplus.guildId, 'lighthouse').toUpperCase(),
