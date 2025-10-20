@@ -18,7 +18,9 @@
 
 */
 
-const scheduleRustplusReconnect = require('../util/scheduleRustplusReconnect');
+const DiscordMessages = require('../discordTools/discordMessages.js');
+
+const Config = require('../../config');
 
 module.exports = {
     name: 'disconnected',
@@ -30,6 +32,7 @@ module.exports = {
         rustplus.log(client.intlGet(null, 'disconnectedCap'), client.intlGet(null, 'disconnectedFromServer'));
 
         const guildId = rustplus.guildId;
+        const serverId = rustplus.serverId;
 
         if (rustplus.leaderRustPlusInstance !== null) {
             if (client.rustplusLiteReconnectTimers[guildId]) {
@@ -56,7 +59,31 @@ module.exports = {
 
         /* Was the disconnection unexpected? */
         if (client.activeRustplusInstances[guildId]) {
-            await scheduleRustplusReconnect(rustplus, client);
+            if (!client.rustplusReconnecting[guildId]) {
+                await DiscordMessages.sendServerChangeStateMessage(guildId, serverId, 1);
+                await DiscordMessages.sendServerMessage(guildId, serverId, 2);
+            }
+
+            client.rustplusReconnecting[guildId] = true;
+
+            rustplus.log(client.intlGet(null, 'reconnectingCap'), client.intlGet(null, 'reconnectingToServer'));
+
+            delete client.rustplusInstances[guildId];
+
+            if (client.rustplusReconnectTimers[guildId]) {
+                clearTimeout(client.rustplusReconnectTimers[guildId]);
+                client.rustplusReconnectTimers[guildId] = null;
+            }
+
+            client.rustplusReconnectTimers[guildId] = setTimeout(
+                client.createRustplusInstance.bind(client),
+                Config.general.reconnectIntervalMs,
+                guildId,
+                rustplus.server,
+                rustplus.port,
+                rustplus.playerId,
+                rustplus.playerToken
+            );
         }
     },
 };
