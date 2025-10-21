@@ -75,23 +75,14 @@ module.exports = {
                 client.rustplusReconnectTimers[guildId] = null;
             }
 
-            const instance = client.getInstance(guildId);
-            const serverConfig = (instance && instance.serverList && instance.serverList[serverId]) ?
-                instance.serverList[serverId] : null;
-
-            const serverIp = serverConfig ? serverConfig.serverIp : rustplus.server;
-            const appPort = serverConfig ? serverConfig.appPort : rustplus.port;
-            const steamId = serverConfig ? serverConfig.steamId : rustplus.playerId;
-            const playerToken = serverConfig ? serverConfig.playerToken : rustplus.playerToken;
-
             client.rustplusReconnectTimers[guildId] = setTimeout(
                 client.createRustplusInstance.bind(client),
                 Config.general.reconnectIntervalMs,
                 guildId,
-                serverIp,
-                appPort,
-                steamId,
-                playerToken
+                rustplus.server,
+                rustplus.port,
+                rustplus.playerId,
+                rustplus.playerToken
             );
         }
     },
