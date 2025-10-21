@@ -23,6 +23,41 @@ const DiscordMessages = require('../discordTools/discordMessages.js');
 const DiscordTools = require('../discordTools/discordTools.js');
 const Scrape = require('../util/scrape.js');
 
+function updateTrackerPlayerStatuses(instance, trackerId, bmInstance) {
+    if (!instance || !instance.trackers || !instance.trackers.hasOwnProperty(trackerId)) {
+        return false;
+    }
+
+    const tracker = instance.trackers[trackerId];
+    if (!Array.isArray(tracker.players)) {
+        return false;
+    }
+
+    let hasChanges = false;
+    for (const player of tracker.players) {
+        if (!player) continue;
+
+        const previousOnline = Object.prototype.hasOwnProperty.call(player, 'isOnline') ? player.isOnline : undefined;
+
+        let isOnline = null;
+
+        if (bmInstance && bmInstance.lastUpdateSuccessful && player.playerId &&
+            Object.prototype.hasOwnProperty.call(bmInstance.players, player.playerId)) {
+            const playerData = bmInstance.players[player.playerId];
+            if (typeof playerData['status'] === 'boolean') {
+                isOnline = playerData['status'];
+            }
+        }
+
+        if (!Object.prototype.hasOwnProperty.call(player, 'isOnline') || previousOnline !== isOnline) {
+            player.isOnline = isOnline;
+            hasChanges = true;
+        }
+    }
+
+    return hasChanges;
+}
+
 module.exports = {
     handler: async function (client, firstTime = false) {
         const searchSteamProfiles = (client.battlemetricsIntervalCounter === 0) ? true : false;
@@ -62,8 +97,15 @@ module.exports = {
             for (const [trackerId, content] of Object.entries(instance.trackers)) {
                 const battlemetricsId = content.battlemetricsId;
                 const bmInstance = client.battlemetricsInstances[battlemetricsId];
+                let instanceChanged = false;
 
-                if (!bmInstance || !bmInstance.lastUpdateSuccessful) continue;
+                if (!bmInstance || !bmInstance.lastUpdateSuccessful) {
+                    instanceChanged = updateTrackerPlayerStatuses(instance, trackerId, null) || instanceChanged;
+                    if (instanceChanged) {
+                        client.setInstance(guildId, instance);
+                    }
+                    continue;
+                }
 
                 if (firstTime || searchSteamProfiles) {
                     for (const player of content.players) {
@@ -87,14 +129,23 @@ module.exports = {
 
                             const newPlayerId = Object.keys(bmInstance.players)
                                 .find(e => bmInstance.players[e]['name'] === name);
-                            player.playerId = newPlayerId ? newPlayerId : null;
-                            player.name = name;
+                            const resolvedPlayerId = newPlayerId ? newPlayerId : null;
+                            if (player.playerId !== resolvedPlayerId) {
+                                player.playerId = resolvedPlayerId;
+                                instanceChanged = true;
+                            }
+                            if (player.name !== name) {
+                                player.name = name;
+                                instanceChanged = true;
+                            }
                         }
                     }
-
-                    client.setInstance(guildId, instance);
+                    instanceChanged = updateTrackerPlayerStatuses(instance, trackerId, bmInstance) || instanceChanged;
 
                     if (firstTime) {
+                        if (instanceChanged) {
+                            client.setInstance(guildId, instance);
+                        }
                         await DiscordMessages.sendTrackerMessage(guildId, trackerId);
                         continue;
                     }
@@ -167,7 +218,11 @@ module.exports = {
                     }
                 }
 
-                client.setInstance(guildId, instance);
+                instanceChanged = updateTrackerPlayerStatuses(instance, trackerId, bmInstance) || instanceChanged;
+
+                if (instanceChanged) {
+                    client.setInstance(guildId, instance);
+                }
 
                 await DiscordMessages.sendTrackerMessage(guildId, trackerId);
             }
