@@ -2380,8 +2380,7 @@ class RustPlus extends RustPlusLib {
             tracker.players.push({
                 name: storedName,
                 steamId: steamId,
-                playerId: playerId,
-                isOnline: null
+                playerId: playerId
             });
             Client.client.setInstance(this.guildId, instance);
 
