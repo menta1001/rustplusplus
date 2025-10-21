@@ -479,8 +479,7 @@ module.exports = async (client, interaction) => {
         tracker.players.push({
             name: name,
             steamId: steamId,
-            playerId: playerId,
-            isOnline: null
+            playerId: playerId
         });
         client.setInstance(interaction.guildId, instance);
 

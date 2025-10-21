@@ -248,17 +248,8 @@ module.exports = {
                 Client.client.intlGet(guildId, 'empty') : ''}`;
             id += '\n';
 
-            const fallbackStatus = (() => {
-                if (typeof player.isOnline === 'boolean') {
-                    const emoji = player.isOnline ? Constants.ONLINE_EMOJI : Constants.OFFLINE_EMOJI;
-                    return `${emoji}\n`;
-                }
-
-                return `${Constants.NOT_FOUND_EMOJI}\n`;
-            })();
-
-            if (!successful || !player.playerId || !bmInstance.players.hasOwnProperty(player.playerId)) {
-                status += fallbackStatus;
+            if (!bmInstance.players.hasOwnProperty(player.playerId) || !successful) {
+                status += `${Constants.NOT_FOUND_EMOJI}\n`;
             }
             else {
                 let time = null;
