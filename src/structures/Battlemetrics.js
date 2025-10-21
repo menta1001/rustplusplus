@@ -35,6 +35,18 @@ const BATTLEMETRICS_AXIOS_OPTIONS = {
     validateStatus: () => true,
 };
 
+const REQUEST_RETRY_ATTEMPTS = 3;
+const REQUEST_RETRY_BASE_DELAY_MS = 2000;
+const REQUEST_RETRY_MAX_DELAY_MS = 30000;
+const RETRYABLE_ERROR_CODES = new Set([
+    'ECONNABORTED',
+    'ETIMEDOUT',
+    'ECONNRESET',
+    'EAI_AGAIN',
+    'ENOTFOUND',
+    'EPIPE',
+]);
+
 if (Config.battlemetrics && Config.battlemetrics.apiKey) {
     BATTLEMETRICS_AXIOS_OPTIONS.headers['Authorization'] = `Bearer ${Config.battlemetrics.apiKey}`;
 }
@@ -232,7 +244,66 @@ class Battlemetrics {
      *  @return {object} The response from Axios library.
      */
     async #request(api_call) {
-        return await Axios.get(api_call, BATTLEMETRICS_AXIOS_OPTIONS);
+        let attempt = 0;
+        let lastError = null;
+
+        while (attempt < REQUEST_RETRY_ATTEMPTS) {
+            attempt += 1;
+
+            try {
+                return await Axios.get(api_call, BATTLEMETRICS_AXIOS_OPTIONS);
+            }
+            catch (error) {
+                lastError = error;
+
+                if (!this.#shouldRetryRequest(error, attempt)) {
+                    throw error;
+                }
+
+                const delay = this.#calculateRetryDelay(error, attempt);
+                if (delay > 0) {
+                    await this.#delay(delay);
+                }
+            }
+        }
+
+        throw lastError;
+    }
+
+    async #delay(ms) {
+        await new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    #shouldRetryRequest(error, attempt) {
+        if (attempt >= REQUEST_RETRY_ATTEMPTS) return false;
+        if (!error || typeof error !== 'object') return false;
+
+        if (error.response && typeof error.response.status === 'number') {
+            const status = error.response.status;
+            if (status === 429) return true;
+            if (status >= 500 && status < 600) return true;
+        }
+
+        if (typeof error.code === 'string' && RETRYABLE_ERROR_CODES.has(error.code)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    #calculateRetryDelay(error, attempt) {
+        if (error && error.response && error.response.headers) {
+            const retryAfter = error.response.headers['retry-after'];
+            if (retryAfter !== undefined) {
+                const parsed = Number.parseFloat(retryAfter);
+                if (Number.isFinite(parsed) && parsed > 0) {
+                    return Math.min(parsed * 1000, REQUEST_RETRY_MAX_DELAY_MS);
+                }
+            }
+        }
+
+        const exponentialDelay = REQUEST_RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+        return Math.min(exponentialDelay, REQUEST_RETRY_MAX_DELAY_MS);
     }
 
     #logRequestFailure(api_call, failure) {
