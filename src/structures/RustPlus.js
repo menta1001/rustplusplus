@@ -2515,63 +2515,36 @@ class RustPlus extends RustPlusLib {
         const trademarkString = (trademark === 'NOT SHOWING') ? '' : `${trademark} | `;
         const messageMaxLength = Constants.MAX_LENGTH_TEAM_MESSAGE - trademarkString.length;
         const header = Client.client.intlGet(this.guildId, 'trackerInfoHeader', { tracker: tracker.name });
-        const entriesLimited = [];
-        let currentLength = `${header} `.length;
 
-        for (const entry of entries) {
-            const separatorLength = entriesLimited.length > 0 ? 2 : 0;
-            if ((currentLength + separatorLength + entry.length) > messageMaxLength) {
-                break;
-            }
-            entriesLimited.push(entry);
-            currentLength += separatorLength + entry.length;
-        }
-
-        let remaining = entries.length - entriesLimited.length;
-        let message = entriesLimited.length > 0 ?
-            `${header} ${entriesLimited.join(', ')}` :
-            `${header}`;
-
-        const moreWord = Client.client.intlGet(this.guildId, 'more');
-        if (remaining > 0) {
-            let suffix = ` ...${remaining} ${moreWord}.`;
-            while ((message.length + suffix.length) > messageMaxLength && entriesLimited.length > 0) {
-                entriesLimited.pop();
-                remaining = entries.length - entriesLimited.length;
-                message = entriesLimited.length > 0 ?
-                    `${header} ${entriesLimited.join(', ')}` :
-                    `${header}`;
-                suffix = ` ...${remaining} ${moreWord}.`;
-            }
-            if ((message.length + suffix.length) > messageMaxLength) {
-                message = header;
-                suffix = (message.length + suffix.length) <= messageMaxLength ? suffix : '';
-            }
-            message = `${message}${suffix}`;
-        }
-        else {
-            if (!message.endsWith('.')) message += '.';
-        }
-
-        if (!message.endsWith('.')) {
-            if ((message.length + 1) <= messageMaxLength) {
-                message += '.';
-            }
-        }
-
+        const lines = [header, ...entries];
         if (!hasData) {
-            const noDataString = Client.client.intlGet(this.guildId, 'noData');
-            if (message.endsWith('.')) {
-                if ((message.length + 1 + noDataString.length) <= messageMaxLength) {
-                    message += ` ${noDataString}`;
-                }
+            lines.push(Client.client.intlGet(this.guildId, 'noData'));
+        }
+
+        const messages = [];
+        let currentMessage = '';
+
+        for (const line of lines) {
+            const candidate = currentMessage === '' ? line : `${currentMessage}\n${line}`;
+
+            if (candidate.length > messageMaxLength && currentMessage !== '') {
+                messages.push(currentMessage);
+                currentMessage = line;
             }
-            else if ((message.length + 2 + noDataString.length) <= messageMaxLength) {
-                message += `. ${noDataString}`;
+            else if (candidate.length > messageMaxLength) {
+                messages.push(line);
+                currentMessage = '';
+            }
+            else {
+                currentMessage = candidate;
             }
         }
 
-        return message;
+        if (currentMessage !== '') {
+            messages.push(currentMessage);
+        }
+
+        return messages.length === 1 ? messages[0] : messages;
     }
 
     getCommandPop(isInfoChannel = false) {

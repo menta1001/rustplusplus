@@ -31,7 +31,7 @@ module.exports = {
                         .setName('tracker')
                         .setDescription(client.intlGet(guildId, 'commandsTrackerDesc'))
                         .addSubcommand(subcommand => subcommand
-                                .setName('info')
+                                .setName('group')
                                 .setDescription(client.intlGet(guildId, 'commandsTrackerInfoDesc'))
                                 .addStringOption(option => option
                                         .setName('tracker')
@@ -47,7 +47,7 @@ module.exports = {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
                 switch (interaction.options.getSubcommand()) {
-                        case 'info': {
+                        case 'group': {
                                 await trackerInfoHandler(client, interaction);
                         } break;
 
@@ -130,9 +130,9 @@ async function trackerInfoHandler(client, interaction) {
         }
 
         const tracker = trackers[trackerId];
-        const embed = DiscordEmbeds.getTrackerEmbed(guildId, trackerId);
+        const embeds = DiscordEmbeds.getTrackerEmbed(guildId, trackerId);
 
-        await client.interactionEditReply(interaction, { embeds: [embed] });
+        await client.interactionEditReply(interaction, { embeds });
         client.log(client.intlGet(guildId, 'infoCap'), client.intlGet(guildId, 'trackerInfoHeader', {
                 tracker: tracker.name
         }));

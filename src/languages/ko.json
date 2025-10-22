@@ -204,7 +204,7 @@
     "commandsDespawnDesc": "Display the despawn time of an item.",
     "commandsHelpCommandList": "명령어 리스트",
     "commandsHelpDesc": "도움말 메시지를 표시합니다.",
-    "commandsHelpDiscordTrackerExample": "/tracker info tracker: Main Team",
+    "commandsHelpDiscordTrackerExample": "/tracker group tracker: Main Team",
     "commandsHelpHowToCredentials": "자격 증명 가이드",
     "commandsHelpHowToPairServer": "서버 페어링 가이드",
     "commandsItemDesc": "Get the details of an item.",
