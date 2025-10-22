@@ -218,7 +218,7 @@
     "commandsDespawnDesc": "Zeige Dauer bis zum Despawn eines Gegenstands an.",
     "commandsHelpCommandList": "Befehlsliste",
     "commandsHelpDesc": "Hilfe-Nachricht anzeigen.",
-    "commandsHelpDiscordTrackerExample": "/tracker info tracker: Main Team",
+    "commandsHelpDiscordTrackerExample": "/tracker tracker group tracker: Main Team",
     "commandsHelpHowToCredentials": "Anleitung, um die FCM-Anmeldedaten zu registrieren",
     "commandsHelpHowToPairServer": "Anleitung, um den Bot mit dem Rust-Server zu koppeln",
     "commandsItemDesc": "Erhalte die Details eines Gegenstandes.",
