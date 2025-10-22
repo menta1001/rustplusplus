@@ -204,7 +204,7 @@
     "commandsDespawnDesc": "Display the despawn time of an item.",
     "commandsHelpCommandList": "Kommandolista",
     "commandsHelpDesc": "Visa hjälpmeddelande.",
-    "commandsHelpDiscordTrackerExample": "/tracker info tracker: Main Team",
+    "commandsHelpDiscordTrackerExample": "/tracker group tracker: Main Team",
     "commandsHelpHowToCredentials": "Så här registrerar du FCM-uppgifterna",
     "commandsHelpHowToPairServer": "Så här parar du botten med Rust Server",
     "commandsItemDesc": "Get the details of an item.",

@@ -680,7 +680,7 @@ Subcommand | Description | Required
 
 > **Display tracked player information using configured trackers.**
 <br>Command: `!tracker <tracker-name-or-id>`
-<br>Command: `!tracker info <tracker-name-or-id>`
+<br>Command: `!tracker group <tracker-name-or-id>`
 <br>Command: `!tracker add <tracker name> <steamId|playerId>`
 
 

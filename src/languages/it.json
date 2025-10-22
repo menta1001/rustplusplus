@@ -204,7 +204,7 @@
     "commandsDespawnDesc": "Display the despawn time of an item.",
     "commandsHelpCommandList": "Elenco dei comandi",
     "commandsHelpDesc": "Mostra il messaggio di aiuto.",
-    "commandsHelpDiscordTrackerExample": "/tracker info tracker: Main Team",
+    "commandsHelpDiscordTrackerExample": "/tracker group tracker: Main Team",
     "commandsHelpHowToCredentials": "Come Registrare le Credenziali",
     "commandsHelpHowToPairServer": "Come Associare il Bot con il Server Rust",
     "commandsItemDesc": "Get the details of an item.",
