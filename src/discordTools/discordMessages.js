@@ -107,7 +107,7 @@ module.exports = {
         const tracker = instance.trackers[trackerId];
 
         const content = {
-            embeds: [DiscordEmbeds.getTrackerEmbed(guildId, trackerId)],
+            embeds: DiscordEmbeds.getTrackerEmbed(guildId, trackerId),
             components: DiscordButtons.getTrackerButtons(guildId, trackerId)
         }
 
