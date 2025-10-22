@@ -18,21 +18,22 @@
 
 */
 
-const Discord = require('discord.js');
-const Fs = require('fs');
-const Path = require('path');
+import { GatewayIntentBits } from 'discord.js';
+import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
-const DiscordBot = require('./src/structures/DiscordBot');
+import DiscordBot from './src/structures/DiscordBot';
 
 createMissingDirectories();
 
 const client = new DiscordBot({
     intents: [
-        Discord.GatewayIntentBits.Guilds,
-        Discord.GatewayIntentBits.GuildMessages,
-        Discord.GatewayIntentBits.MessageContent,
-        Discord.GatewayIntentBits.GuildMembers,
-        Discord.GatewayIntentBits.GuildVoiceStates],
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates
+    ],
     retryLimit: 2,
     restRequestTimeout: 60000,
     disableEveryone: false
@@ -40,29 +41,26 @@ const client = new DiscordBot({
 
 client.build();
 
-function createMissingDirectories() {
-    if (!Fs.existsSync(Path.join(__dirname, 'logs'))) {
-        Fs.mkdirSync(Path.join(__dirname, 'logs'));
-    }
+function createMissingDirectories(): void {
+    const directories = ['logs', 'instances', 'credentials', 'maps'] as const;
 
-    if (!Fs.existsSync(Path.join(__dirname, 'instances'))) {
-        Fs.mkdirSync(Path.join(__dirname, 'instances'));
-    }
+    for (const directory of directories) {
+        const targetPath = join(__dirname, directory);
 
-    if (!Fs.existsSync(Path.join(__dirname, 'credentials'))) {
-        Fs.mkdirSync(Path.join(__dirname, 'credentials'));
-    }
-
-    if (!Fs.existsSync(Path.join(__dirname, 'maps'))) {
-        Fs.mkdirSync(Path.join(__dirname, 'maps'));
+        if (!existsSync(targetPath)) {
+            mkdirSync(targetPath, { recursive: true });
+        }
     }
 }
 
-process.on('unhandledRejection', error => {
-    client.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'unhandledRejection', {
-        error: error
-    }), 'error');
-    console.log(error);
+process.on('unhandledRejection', (error: unknown) => {
+    client.log(
+        client.intlGet(null, 'errorCap'),
+        client.intlGet(null, 'unhandledRejection', { error }),
+        'error'
+    );
+
+    console.error(error);
 });
 
-exports.client = client;
+export { client };
