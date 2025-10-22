@@ -218,7 +218,7 @@
     "commandsDespawnDesc": "Zobrazit čas despawnu položky.",
     "commandsHelpCommandList": "Seznam příkazů",
     "commandsHelpDesc": "Zobrazit nápovědu.",
-    "commandsHelpDiscordTrackerExample": "/tracker info tracker: Main Team",
+    "commandsHelpDiscordTrackerExample": "/tracker tracker group tracker: Main Team",
     "commandsHelpHowToCredentials": "Jak registrovat FCM údaje",
     "commandsHelpHowToPairServer": "Jak spárovat bota s Rust serverem",
     "commandsItemDesc": "Získat podrobnosti o položce.",
