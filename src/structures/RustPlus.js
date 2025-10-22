@@ -2162,7 +2162,7 @@ class RustPlus extends RustPlusLib {
         const commandLower = command.toLowerCase();
         const usage = Client.client.intlGet(this.guildId, 'trackerCommandUsage', {
             prefix: prefix,
-            trackerOptions: '<tracker group|add>'
+            trackerOptions: '<info|add>'
         });
 
         let commandBody = null;
@@ -2192,29 +2192,6 @@ class RustPlus extends RustPlusLib {
         const commandAddEn = Client.client.intlGet('en', 'commandSyntaxAdd').toLowerCase();
         const commandInfo = Client.client.intlGet(this.guildId, 'commandSyntaxInfo').toLowerCase();
         const commandInfoEn = Client.client.intlGet('en', 'commandSyntaxInfo').toLowerCase();
-
-        const lowerParts = parts.map(part => part.toLowerCase());
-        const firstLower = lowerParts[0];
-
-        const infoKeywordCandidates = [];
-        if (commandInfo) infoKeywordCandidates.push(commandInfo);
-        if (commandInfoEn && commandInfoEn !== commandInfo) infoKeywordCandidates.push(commandInfoEn);
-        infoKeywordCandidates.push('info');
-
-        let isInfoCommand = false;
-        let infoWordCount = 1;
-        for (const keyword of infoKeywordCandidates) {
-            const keywordParts = keyword.split(/\s+/).filter(part => part.length > 0);
-            if (keywordParts.length === 0) continue;
-            if (parts.length < keywordParts.length) continue;
-
-            const candidate = lowerParts.slice(0, keywordParts.length);
-            if (candidate.join(' ') === keywordParts.join(' ')) {
-                isInfoCommand = true;
-                infoWordCount = keywordParts.length;
-                break;
-            }
-        }
 
         const resolveTracker = (trackerName) => {
             if (!instance.trackers) {
@@ -2313,6 +2290,8 @@ class RustPlus extends RustPlusLib {
 
             return { tracker: instance.trackers[trackerId], trackerId: trackerId, created: true };
         };
+
+        const firstLower = parts[0].toLowerCase();
 
         if (firstLower === commandAdd || firstLower === commandAddEn) {
             if (parts.length < 3) {
@@ -2420,8 +2399,8 @@ class RustPlus extends RustPlusLib {
         }
 
         let trackerName = commandBody;
-        if (isInfoCommand) {
-            trackerName = parts.slice(infoWordCount).join(' ').trim();
+        if (firstLower === commandInfo || firstLower === commandInfoEn) {
+            trackerName = commandBody.slice(parts[0].length).trim();
             if (trackerName === '') {
                 const trackers = instance.trackers;
                 if (!trackers || Object.keys(trackers).length === 0) {
@@ -2451,7 +2430,7 @@ class RustPlus extends RustPlusLib {
             }
         }
 
-        const result = await ensureTracker(trackerName, { allowCreate: !isInfoCommand });
+        const result = await ensureTracker(trackerName, { allowCreate: firstLower !== commandInfo && firstLower !== commandInfoEn });
         if (result && result.error === 'server') {
             return Client.client.intlGet(this.guildId, 'trackerServerUnavailable');
         }
@@ -2554,9 +2533,8 @@ class RustPlus extends RustPlusLib {
             `${header}`;
 
         const moreWord = Client.client.intlGet(this.guildId, 'more');
-        let suffix = '';
         if (remaining > 0) {
-            suffix = ` ...${remaining} ${moreWord}.`;
+            let suffix = ` ...${remaining} ${moreWord}.`;
             while ((message.length + suffix.length) > messageMaxLength && entriesLimited.length > 0) {
                 entriesLimited.pop();
                 remaining = entries.length - entriesLimited.length;
@@ -2581,35 +2559,19 @@ class RustPlus extends RustPlusLib {
             }
         }
 
-        let appendedNoData = false;
         if (!hasData) {
             const noDataString = Client.client.intlGet(this.guildId, 'noData');
             if (message.endsWith('.')) {
                 if ((message.length + 1 + noDataString.length) <= messageMaxLength) {
                     message += ` ${noDataString}`;
-                    appendedNoData = true;
                 }
             }
             else if ((message.length + 2 + noDataString.length) <= messageMaxLength) {
                 message += `. ${noDataString}`;
-                appendedNoData = true;
             }
         }
 
-        const lines = [header];
-        for (const entry of entriesLimited) {
-            lines.push(entry);
-        }
-
-        if (remaining > 0 && suffix.trim() !== '') {
-            lines.push(suffix.trim());
-        }
-
-        if (!hasData && appendedNoData) {
-            lines.push(Client.client.intlGet(this.guildId, 'noData'));
-        }
-
-        return lines;
+        return message;
     }
 
     getCommandPop(isInfoChannel = false) {

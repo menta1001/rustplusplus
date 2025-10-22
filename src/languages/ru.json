@@ -204,7 +204,7 @@
     "commandsDespawnDesc": "Отображение времени исчезновения элемента.",
     "commandsHelpCommandList": "Список команд",
     "commandsHelpDesc": "Показать информацию о боте.",
-    "commandsHelpDiscordTrackerExample": "/tracker tracker group tracker: Main Team",
+    "commandsHelpDiscordTrackerExample": "/tracker info tracker: Main Team",
     "commandsHelpHowToCredentials": "Как зарегистрировать учетные данные",
     "commandsHelpHowToPairServer": "Как связать бота с сервером Rust",
     "commandsItemDesc": "Получить информацию о предмете.",
