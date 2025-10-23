@@ -371,9 +371,7 @@ class Battlemetrics {
             if (trimmed === '') return messages;
 
             if (this.#looksLikeHtml(trimmed)) {
-                const plainText = Utils.removeInvisibleCharacters(trimmed.replace(/<[^>]*>/g, ' '))
-                    .replace(/\s+/g, ' ')
-                    .trim();
+                const plainText = this.#htmlToPlainText(trimmed);
 
                 if (plainText !== '') {
                     messages.push(this.#truncateMessage(plainText));
@@ -406,6 +404,29 @@ class Battlemetrics {
     #looksLikeHtml(content) {
         const sample = content.slice(0, 200).toLowerCase();
         return sample.includes('<html') || sample.includes('<!doctype') || sample.includes('<body');
+    }
+
+    #htmlToPlainText(html) {
+        if (typeof html !== 'string') return '';
+
+        const withoutScripts = html
+            .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+            .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+            .replace(/<!--[\s\S]*?-->/g, ' ');
+
+        const withoutTags = withoutScripts.replace(/<[^>]*>/g, ' ');
+
+        const decoded = withoutTags
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/&amp;/gi, '&')
+            .replace(/&lt;/gi, '<')
+            .replace(/&gt;/gi, '>')
+            .replace(/&quot;/gi, '"')
+            .replace(/&#39;/gi, "'");
+
+        return Utils.removeInvisibleCharacters(decoded)
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 
     #truncateMessage(message, maxLength = 300) {
