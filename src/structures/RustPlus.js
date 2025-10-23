@@ -2282,6 +2282,8 @@ class RustPlus extends RustPlusLib {
                 clanTag: '',
                 everyone: false,
                 inGame: true,
+                autoUpdateMode: Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES,
+                lastAutoUpdate: null,
                 players: [],
                 messageId: null
             };

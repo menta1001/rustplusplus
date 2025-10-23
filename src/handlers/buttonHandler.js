@@ -26,6 +26,7 @@ const DiscordTools = require('../discordTools/discordTools.js');
 const SmartSwitchGroupHandler = require('./smartSwitchGroupHandler.js');
 const DiscordButtons = require('../discordTools/discordButtons.js');
 const DiscordModals = require('../discordTools/discordModals.js');
+const Constants = require('../util/constants.js');
 
 module.exports = async (client, interaction) => {
     const instance = client.getInstance(interaction.guildId);
@@ -566,6 +567,8 @@ module.exports = async (client, interaction) => {
             clanTag: '',
             everyone: false,
             inGame: true,
+            autoUpdateMode: Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES,
+            lastAutoUpdate: null,
             players: [],
             messageId: null
         }
@@ -1136,6 +1139,41 @@ module.exports = async (client, interaction) => {
         }
 
         // TODO! Remove name change icon from status
+
+        await DiscordMessages.sendTrackerMessage(guildId, ids.trackerId, interaction);
+    }
+    else if (interaction.customId.startsWith('TrackerAutoUpdate')) {
+        const ids = JSON.parse(interaction.customId.replace('TrackerAutoUpdate', ''));
+        const tracker = instance.trackers[ids.trackerId];
+
+        if (!tracker) {
+            await interaction.message.delete();
+            return;
+        }
+
+        const modes = [
+            Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES,
+            Constants.TRACKER_AUTO_UPDATE_MODES.FIFTEEN_MINUTES,
+            Constants.TRACKER_AUTO_UPDATE_MODES.PLAYER_ONLINE
+        ];
+        const currentMode = tracker.autoUpdateMode ? tracker.autoUpdateMode : Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES;
+        const currentIndex = modes.indexOf(currentMode);
+        const nextMode = modes[(currentIndex + 1) % modes.length];
+
+        tracker.autoUpdateMode = nextMode;
+        if (nextMode === Constants.TRACKER_AUTO_UPDATE_MODES.PLAYER_ONLINE) {
+            tracker.lastAutoUpdate = null;
+        }
+        else {
+            tracker.lastAutoUpdate = Date.now();
+        }
+
+        client.setInstance(guildId, instance);
+
+        client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'buttonValueChange', {
+            id: `${verifyId}`,
+            value: `${nextMode}`
+        }));
 
         await DiscordMessages.sendTrackerMessage(guildId, ids.trackerId, interaction);
     }

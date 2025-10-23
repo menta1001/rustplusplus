@@ -105,6 +105,9 @@ module.exports = {
     sendTrackerMessage: async function (guildId, trackerId, interaction = null) {
         const instance = Client.client.getInstance(guildId);
         const tracker = instance.trackers[trackerId];
+        if (!tracker) {
+            return;
+        }
 
         const content = {
             embeds: DiscordEmbeds.getTrackerEmbed(guildId, trackerId),
@@ -114,10 +117,18 @@ module.exports = {
         const message = await module.exports.sendMessage(guildId, content, tracker.messageId,
             instance.channelId.trackers, interaction);
 
-        if (!interaction) {
-            instance.trackers[trackerId].messageId = message.id;
-            Client.client.setInstance(guildId, instance);
+        const trackerRef = instance.trackers[trackerId];
+        if (!trackerRef) {
+            return;
         }
+
+        trackerRef.lastAutoUpdate = Date.now();
+        if (!interaction) {
+            trackerRef.messageId = message.id;
+        }
+
+        instance.trackers[trackerId] = trackerRef;
+        Client.client.setInstance(guildId, instance);
     },
 
     sendSmartSwitchMessage: async function (guildId, serverId, entityId, interaction = null) {
