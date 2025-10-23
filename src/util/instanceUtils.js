@@ -18,10 +18,18 @@
 
 */
 
-const Fs = require('fs');
 const Path = require('path');
 
 const Client = require('../../index.ts');
+const JsonFileCache = require('./jsonFileCache');
+
+function getInstancePath(guildId) {
+    return Path.join(__dirname, '..', '..', 'instances', `${guildId}.json`);
+}
+
+function getCredentialsPath(guildId) {
+    return Path.join(__dirname, '..', '..', 'credentials', `${guildId}.json`);
+}
 
 module.exports = {
     getSmartDevice: function (guildId, entityId) {
@@ -43,22 +51,26 @@ module.exports = {
     },
 
     readInstanceFile: function (guildId) {
-        const path = Path.join(__dirname, '..', '..', 'instances', `${guildId}.json`);
-        return JSON.parse(Fs.readFileSync(path, 'utf8'));
+        return JsonFileCache.readJson(getInstancePath(guildId));
     },
 
     writeInstanceFile: function (guildId, instance) {
-        const path = Path.join(__dirname, '..', '..', 'instances', `${guildId}.json`);
-        Fs.writeFileSync(path, JSON.stringify(instance, null, 2));
+        JsonFileCache.writeJson(getInstancePath(guildId), instance);
+    },
+
+    invalidateInstanceCache: function (guildId) {
+        JsonFileCache.invalidate(getInstancePath(guildId));
     },
 
     readCredentialsFile: function (guildId) {
-        const path = Path.join(__dirname, '..', '..', 'credentials', `${guildId}.json`);
-        return JSON.parse(Fs.readFileSync(path, 'utf8'));
+        return JsonFileCache.readJson(getCredentialsPath(guildId));
     },
 
     writeCredentialsFile: function (guildId, credentials) {
-        const path = Path.join(__dirname, '..', '..', 'credentials', `${guildId}.json`);
-        Fs.writeFileSync(path, JSON.stringify(credentials, null, 2));
+        JsonFileCache.writeJson(getCredentialsPath(guildId), credentials);
+    },
+
+    invalidateCredentialsCache: function (guildId) {
+        JsonFileCache.invalidate(getCredentialsPath(guildId));
     },
 }
