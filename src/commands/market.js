@@ -191,6 +191,7 @@ module.exports = {
                 client.setInstance(interaction.guildId, instance);
 
                 await DiscordMessages.sendMarketListingsMessage(interaction.guildId, rustplus.serverId);
+                rustplus.lastMarketListingsUpdate = Date.now();
 
                 let response = '';
                 if (addedNames.length > 0) {
@@ -253,6 +254,7 @@ module.exports = {
                 client.setInstance(interaction.guildId, instance);
 
                 await DiscordMessages.sendMarketListingsMessage(interaction.guildId, rustplus.serverId);
+                rustplus.lastMarketListingsUpdate = Date.now();
 
                 let response = '';
                 if (removedNames.length > 0) {
