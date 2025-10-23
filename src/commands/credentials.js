@@ -220,10 +220,10 @@ async function removeCredentials(client, interaction, verifyId) {
         credentials.hoster = null;
     }
     else {
-        if (client.fcmListenersLite[guildId][steamId]) {
+        if (client.fcmListenersLite[guildId] && client.fcmListenersLite[guildId][steamId]) {
             client.fcmListenersLite[guildId][steamId].destroy();
+            delete client.fcmListenersLite[guildId][steamId];
         }
-        delete client.fcmListenersLite[guildId][steamId];
     }
 
     delete credentials[steamId];

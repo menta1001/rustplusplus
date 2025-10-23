@@ -369,10 +369,10 @@ class DiscordBot extends Discord.Client {
                 credentials.hoster = null;
             }
             else {
-                if (this.fcmListenersLite[guild.id][steamId]) {
+                if (this.fcmListenersLite[guild.id] && this.fcmListenersLite[guild.id][steamId]) {
                     this.fcmListenersLite[guild.id][steamId].destroy();
+                    delete this.fcmListenersLite[guild.id][steamId];
                 }
-                delete this.fcmListenersLite[guild.id][steamId];
             }
 
             delete credentials[steamId];
