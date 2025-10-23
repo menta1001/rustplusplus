@@ -367,23 +367,54 @@ class Battlemetrics {
         }
 
         if (typeof payload === 'string') {
-            const sanitized = Utils.removeInvisibleCharacters(payload);
-            if (sanitized !== '') messages.push(sanitized);
+            const trimmed = payload.trim();
+            if (trimmed === '') return messages;
+
+            if (this.#looksLikeHtml(trimmed)) {
+                const plainText = Utils.removeInvisibleCharacters(trimmed.replace(/<[^>]*>/g, ' '))
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (plainText !== '') {
+                    messages.push(this.#truncateMessage(plainText));
+                }
+
+                messages.push('Received HTML response from Battlemetrics instead of JSON (possible Cloudflare error).');
+            }
+            else {
+                const sanitized = Utils.removeInvisibleCharacters(trimmed);
+                if (sanitized !== '') messages.push(this.#truncateMessage(sanitized));
+            }
+
             return messages;
         }
 
         if (typeof payload === 'object') {
             if (typeof payload.message === 'string') {
                 const sanitized = Utils.removeInvisibleCharacters(payload.message);
-                if (sanitized !== '') messages.push(sanitized);
+                if (sanitized !== '') messages.push(this.#truncateMessage(sanitized));
             }
             if (typeof payload.error === 'string') {
                 const sanitized = Utils.removeInvisibleCharacters(payload.error);
-                if (sanitized !== '') messages.push(sanitized);
+                if (sanitized !== '') messages.push(this.#truncateMessage(sanitized));
             }
         }
 
         return messages;
+    }
+
+    #looksLikeHtml(content) {
+        const sample = content.slice(0, 200).toLowerCase();
+        return sample.includes('<html') || sample.includes('<!doctype') || sample.includes('<body');
+    }
+
+    #truncateMessage(message, maxLength = 300) {
+        if (typeof message !== 'string') return '';
+
+        const normalized = message.trim();
+        if (normalized.length <= maxLength) return normalized;
+
+        return `${normalized.slice(0, Math.max(0, maxLength - 3))}...`;
     }
 
     /**
