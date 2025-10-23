@@ -18,11 +18,11 @@
 
 */
 
-const { GatewayIntentBits } = require('discord.js');
-const { existsSync, mkdirSync } = require('fs');
-const { join } = require('path');
+import { GatewayIntentBits } from 'discord.js';
+import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
-const DiscordBot = require('./src/structures/DiscordBot');
+import DiscordBot from './src/structures/DiscordBot';
 
 createMissingDirectories();
 
@@ -41,8 +41,8 @@ const client = new DiscordBot({
 
 client.build();
 
-function createMissingDirectories() {
-    const directories = ['logs', 'instances', 'credentials', 'maps'];
+function createMissingDirectories(): void {
+    const directories = ['logs', 'instances', 'credentials', 'maps'] as const;
 
     for (const directory of directories) {
         const targetPath = join(__dirname, directory);
@@ -53,7 +53,7 @@ function createMissingDirectories() {
     }
 }
 
-process.on('unhandledRejection', error => {
+process.on('unhandledRejection', (error: unknown) => {
     client.log(
         client.intlGet(null, 'errorCap'),
         client.intlGet(null, 'unhandledRejection', { error }),
@@ -63,4 +63,4 @@ process.on('unhandledRejection', error => {
     console.error(error);
 });
 
-module.exports = { client };
+export { client };

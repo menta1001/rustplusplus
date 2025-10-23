@@ -20,7 +20,7 @@
 
 const Path = require('path');
 
-const Client = require('../../index');
+const Client = require('../../index.ts');
 const JsonFileCache = require('./jsonFileCache');
 
 function getInstancePath(guildId) {
