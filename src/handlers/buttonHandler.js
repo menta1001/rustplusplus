@@ -21,6 +21,7 @@
 const Discord = require('discord.js');
 
 const Config = require('../../config');
+const Battlemetrics = require('../structures/Battlemetrics');
 const DiscordMessages = require('../discordTools/discordMessages.js');
 const DiscordTools = require('../discordTools/discordTools.js');
 const SmartSwitchGroupHandler = require('./smartSwitchGroupHandler.js');
@@ -1135,7 +1136,37 @@ module.exports = async (client, interaction) => {
             return;
         }
 
-        // TODO! Remove name change icon from status
+        let bmInstance = null;
+        if (tracker.battlemetricsId !== null) {
+            if (client.battlemetricsInstances.hasOwnProperty(tracker.battlemetricsId)) {
+                bmInstance = client.battlemetricsInstances[tracker.battlemetricsId];
+                await bmInstance.evaluation();
+            }
+            else {
+                bmInstance = new Battlemetrics(tracker.battlemetricsId);
+                await bmInstance.setup();
+                if (bmInstance.lastUpdateSuccessful) {
+                    client.battlemetricsInstances[tracker.battlemetricsId] = bmInstance;
+                }
+                else {
+                    bmInstance = null;
+                }
+            }
+        }
+
+        if (bmInstance && bmInstance.lastUpdateSuccessful) {
+            const serverIdentifier = bmInstance.server_ip && bmInstance.server_port ?
+                `${bmInstance.server_ip}-${bmInstance.server_port}` : tracker.serverId;
+            tracker.serverId = serverIdentifier;
+            if (bmInstance.server_name) tracker.title = bmInstance.server_name;
+        }
+
+        client.setInstance(guildId, instance);
+
+        client.log(client.intlGet(null, 'infoCap'), client.intlGet(null, 'buttonValueChange', {
+            id: `${verifyId}`,
+            value: `TrackerUpdate`
+        }));
 
         await DiscordMessages.sendTrackerMessage(guildId, ids.trackerId, interaction);
     }
