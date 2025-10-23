@@ -39,6 +39,7 @@ module.exports = (client, guild) => {
                 teams: null,
                 settings: null,
                 commands: null,
+                logs: null,
                 events: null,
                 market: null,
                 teamchat: null,
@@ -149,6 +150,7 @@ module.exports = (client, guild) => {
             if (!instance.channelId.hasOwnProperty('teams')) instance.channelId.teams = null;
             if (!instance.channelId.hasOwnProperty('settings')) instance.channelId.settings = null;
             if (!instance.channelId.hasOwnProperty('commands')) instance.channelId.commands = null;
+            if (!instance.channelId.hasOwnProperty('logs')) instance.channelId.logs = null;
             if (!instance.channelId.hasOwnProperty('events')) instance.channelId.events = null;
             if (!instance.channelId.hasOwnProperty('market')) instance.channelId.market = null;
             if (!instance.channelId.hasOwnProperty('teamchat')) instance.channelId.teamchat = null;

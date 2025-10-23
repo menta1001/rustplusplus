@@ -86,6 +86,7 @@
     "channelNameActivity": "etkinlik",
     "channelNameAlarms": "alarmlar",
     "channelNameCommands": "komutlar",
+    "channelNameLogs": "günlükler",
     "channelNameEvents": "olaylar",
     "channelNameInformation": "bilgi",
     "channelNameServers": "sunucular",

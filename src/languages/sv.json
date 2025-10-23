@@ -86,6 +86,7 @@
     "channelNameActivity": "aktiviteter",
     "channelNameAlarms": "larm",
     "channelNameCommands": "kommandon",
+    "channelNameLogs": "loggar",
     "channelNameEvents": "händelser",
     "channelNameInformation": "information",
     "channelNameServers": "servrar",
