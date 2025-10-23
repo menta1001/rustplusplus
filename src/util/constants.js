@@ -31,6 +31,16 @@ module.exports = {
     BOT_MESSAGE_HISTORY_LIMIT: 16,
     BOT_LEAVE_VOICE_CHAT_TIMEOUT_MS: 10000,
 
+    TRACKER_AUTO_UPDATE_MODES: {
+        FIVE_MINUTES: 'fiveMinutes',
+        FIFTEEN_MINUTES: 'fifteenMinutes',
+        PLAYER_ONLINE: 'playerOnline'
+    },
+    TRACKER_AUTO_UPDATE_INTERVALS_MS: {
+        fiveMinutes: 5 * 60 * 1000, /* 5 min */
+        fifteenMinutes: 15 * 60 * 1000 /* 15 min */
+    },
+
     /* Embeds */
     EMBED_MAX_TOTAL_CHARACTERS: 6000,
     EMBED_MAX_TITLE_CHARACTERS: 256,

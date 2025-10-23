@@ -65,6 +65,24 @@ module.exports = {
 
                 if (!bmInstance || !bmInstance.lastUpdateSuccessful) continue;
 
+                let trackerPersisted = false;
+                if (!content.autoUpdateMode) {
+                    content.autoUpdateMode = Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES;
+                    trackerPersisted = true;
+                }
+                if (!Object.prototype.hasOwnProperty.call(content, 'lastAutoUpdate')) {
+                    content.lastAutoUpdate = null;
+                    trackerPersisted = true;
+                }
+                if (trackerPersisted) {
+                    client.setInstance(guildId, instance);
+                }
+
+                const autoUpdateMode = content.autoUpdateMode;
+                let trackerDataChanged = false;
+                let shouldUpdateTracker = false;
+                let playerActivityTriggeredUpdate = false;
+
                 if (firstTime || searchSteamProfiles) {
                     for (const player of content.players) {
                         if (player.steamId === null) continue;
@@ -89,15 +107,22 @@ module.exports = {
                                 .find(e => bmInstance.players[e]['name'] === name);
                             player.playerId = newPlayerId ? newPlayerId : null;
                             player.name = name;
+                            trackerDataChanged = true;
                         }
                     }
 
-                    client.setInstance(guildId, instance);
+                    if (trackerDataChanged) {
+                        client.setInstance(guildId, instance);
+                    }
 
                     if (firstTime) {
                         await DiscordMessages.sendTrackerMessage(guildId, trackerId);
                         continue;
                     }
+                }
+
+                if (trackerDataChanged) {
+                    shouldUpdateTracker = true;
                 }
 
                 const trackerPlayerIds = content.players.map(e => e.playerId);
@@ -109,6 +134,7 @@ module.exports = {
 
                         await module.exports.trackerNewNameDetected(client, guildId, trackerId, battlemetricsId,
                             player.from, player.to);
+                        shouldUpdateTracker = true;
                     }
                 }
 
@@ -127,6 +153,7 @@ module.exports = {
                         if (rustplus && (rustplus.serverId === content.serverId) && content.inGame) {
                             rustplus.sendInGameMessage(str);
                         }
+                        playerActivityTriggeredUpdate = true;
                     }
                 }
 
@@ -145,6 +172,7 @@ module.exports = {
                         if (rustplus && (rustplus.serverId === content.serverId) && content.inGame) {
                             rustplus.sendInGameMessage(str);
                         }
+                        playerActivityTriggeredUpdate = true;
                     }
                 }
 
@@ -164,12 +192,25 @@ module.exports = {
                         if (rustplus && (rustplus.serverId === content.serverId) && content.inGame) {
                             rustplus.sendInGameMessage(str);
                         }
+                        playerActivityTriggeredUpdate = true;
                     }
                 }
 
-                client.setInstance(guildId, instance);
+                if (playerActivityTriggeredUpdate) {
+                    shouldUpdateTracker = true;
+                }
 
-                await DiscordMessages.sendTrackerMessage(guildId, trackerId);
+                const intervalMs = Constants.TRACKER_AUTO_UPDATE_INTERVALS_MS[autoUpdateMode] ?? null;
+                if (intervalMs !== null) {
+                    const lastUpdate = typeof content.lastAutoUpdate === 'number' ? content.lastAutoUpdate : null;
+                    if (lastUpdate === null || Date.now() - lastUpdate >= intervalMs) {
+                        shouldUpdateTracker = true;
+                    }
+                }
+
+                if (shouldUpdateTracker) {
+                    await DiscordMessages.sendTrackerMessage(guildId, trackerId);
+                }
             }
         }
 

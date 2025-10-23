@@ -425,6 +425,15 @@ module.exports = {
         const tracker = instance.trackers[trackerId];
         const identifier = JSON.stringify({ "trackerId": trackerId });
 
+        const autoUpdateMode = tracker.autoUpdateMode ? tracker.autoUpdateMode : Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES;
+        const autoUpdateLabels = {
+            [Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES]: Client.client.intlGet(guildId, 'trackerAutoUpdateModeFiveMinutes'),
+            [Constants.TRACKER_AUTO_UPDATE_MODES.FIFTEEN_MINUTES]: Client.client.intlGet(guildId, 'trackerAutoUpdateModeFifteenMinutes'),
+            [Constants.TRACKER_AUTO_UPDATE_MODES.PLAYER_ONLINE]: Client.client.intlGet(guildId, 'trackerAutoUpdateModePlayerOnline')
+        };
+        const autoUpdateLabelValue = autoUpdateLabels[autoUpdateMode] ? autoUpdateLabels[autoUpdateMode] : autoUpdateMode;
+        const autoUpdateLabel = `${Client.client.intlGet(guildId, 'trackerAutoUpdateCap')}: ${autoUpdateLabelValue}`;
+
         return [
             new Discord.ActionRowBuilder().addComponents(
                 module.exports.getButton({
@@ -462,6 +471,11 @@ module.exports = {
                     customId: `TrackerUpdate${identifier}`,
                     label: Client.client.intlGet(guildId, 'updateCap'),
                     style: PRIMARY
+                }),
+                module.exports.getButton({
+                    customId: `TrackerAutoUpdate${identifier}`,
+                    label: autoUpdateLabel,
+                    style: SECONDARY
                 }))
         ];
     },

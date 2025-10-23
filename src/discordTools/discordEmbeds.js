@@ -208,6 +208,14 @@ module.exports = {
         const battlemetricsId = tracker.battlemetricsId;
         const bmInstance = Client.client.battlemetricsInstances[battlemetricsId];
 
+        const autoUpdateMode = tracker.autoUpdateMode ? tracker.autoUpdateMode : Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES;
+        const autoUpdateLabels = {
+            [Constants.TRACKER_AUTO_UPDATE_MODES.FIVE_MINUTES]: Client.client.intlGet(guildId, 'trackerAutoUpdateModeFiveMinutes'),
+            [Constants.TRACKER_AUTO_UPDATE_MODES.FIFTEEN_MINUTES]: Client.client.intlGet(guildId, 'trackerAutoUpdateModeFifteenMinutes'),
+            [Constants.TRACKER_AUTO_UPDATE_MODES.PLAYER_ONLINE]: Client.client.intlGet(guildId, 'trackerAutoUpdateModePlayerOnline')
+        };
+        const autoUpdateValue = autoUpdateLabels[autoUpdateMode] ? autoUpdateLabels[autoUpdateMode] : autoUpdateMode;
+
         const successful = bmInstance && bmInstance.lastUpdateSuccessful;
         const serverStatus = !successful ? Constants.NOT_FOUND_EMOJI :
             (bmInstance.server_status ? Constants.ONLINE_EMOJI : Constants.OFFLINE_EMOJI);
@@ -228,6 +236,7 @@ module.exports = {
         description += `**${Client.client.intlGet(guildId, 'serverStatus')}:** ${serverStatus}\n`;
         description += `**${Client.client.intlGet(guildId, 'streamerMode')}:** ${streamerModeValue}\n`;
         description += `**${Client.client.intlGet(guildId, 'clanTag')}:** ${clanTagValue}`;
+        description += `\n**${Client.client.intlGet(guildId, 'trackerAutoUpdate')}:** ${autoUpdateValue}`;
 
         const playerEntries = [];
         for (const player of tracker.players) {
