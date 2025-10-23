@@ -20,7 +20,7 @@
 
 const Axios = require('axios');
 
-const Client = require('../../index.ts');
+const Client = require('../../index');
 const Config = require('../../config');
 const PackageJson = require('../../package.json');
 const RandomUsernames = require('../staticFiles/RandomUsernames.json');
