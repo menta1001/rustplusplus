@@ -19,6 +19,7 @@
 */
 
 const DiscordMessages = require('../discordTools/discordMessages.js');
+const Config = require('../../config');
 
 module.exports = {
     name: 'error',
@@ -29,7 +30,7 @@ module.exports = {
 
         switch (err.code) {
             case 'ETIMEDOUT': {
-                errorTimedOut(rustplus, client, err);
+                await errorTimedOut(rustplus, client, err);
             } break;
 
             case 'ENOTFOUND': {
@@ -47,11 +48,12 @@ module.exports = {
     },
 };
 
-function errorTimedOut(rustplus, client, err) {
+async function errorTimedOut(rustplus, client, err) {
     if (err.syscall === 'connect') {
         rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'couldNotConnectTo', {
             id: rustplus.serverId
         }), 'error');
+        await scheduleReconnect(rustplus, client);
     }
 }
 
@@ -67,6 +69,7 @@ async function errorConnRefused(rustplus, client, err) {
     rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'connectionRefusedTo', {
         id: rustplus.serverId
     }), 'error');
+    await scheduleReconnect(rustplus, client);
 }
 
 function errorOther(rustplus, client, err) {
@@ -74,4 +77,41 @@ function errorOther(rustplus, client, err) {
         rustplus.log(client.intlGet(null, 'errorCap'),
             client.intlGet(null, 'websocketClosedBeforeConnection'), 'error');
     }
+}
+
+async function scheduleReconnect(rustplus, client) {
+    if (rustplus.isDeleted) return;
+
+    const guildId = rustplus.guildId;
+    if (!client.activeRustplusInstances[guildId]) return;
+
+    const serverId = rustplus.serverId;
+
+    if (!client.rustplusReconnecting[guildId]) {
+        await DiscordMessages.sendServerChangeStateMessage(guildId, serverId, 1);
+        await DiscordMessages.sendServerMessage(guildId, serverId, 2);
+    }
+
+    client.rustplusReconnecting[guildId] = true;
+
+    rustplus.log(client.intlGet(null, 'reconnectingCap'), client.intlGet(null, 'reconnectingToServer'));
+
+    delete client.rustplusInstances[guildId];
+
+    if (client.rustplusReconnectTimers[guildId]) {
+        clearTimeout(client.rustplusReconnectTimers[guildId]);
+        client.rustplusReconnectTimers[guildId] = null;
+    }
+
+    client.rustplusReconnectTimers[guildId] = setTimeout(
+        client.createRustplusInstance.bind(client),
+        Config.general.reconnectIntervalMs,
+        guildId,
+        rustplus.server,
+        rustplus.port,
+        rustplus.playerId,
+        rustplus.playerToken
+    );
+
+    rustplus.disconnect();
 }

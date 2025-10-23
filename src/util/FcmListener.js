@@ -188,6 +188,16 @@ module.exports = async (client, guild) => {
                 }
             } break;
 
+            case 'news': {
+                if (body.type === 'news') {
+                    client.log('FCM Host', `GuildID: ${guild.id}, SteamID: ${hoster}, news: news`);
+                }
+                else {
+                    client.log('FCM Host',
+                        `GuildID: ${guild.id}, SteamID: ${hoster}, news: other\n${JSON.stringify(data)}`);
+                }
+            } break;
+
             //case 'news': {
             //    switch (body.type) {
             //        case 'news': {
