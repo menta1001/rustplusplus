@@ -22,7 +22,7 @@ const Colors = require("colors");
 const Winston = require("winston");
 
 const Config = require('../../config');
-const Client = require('../../index');
+const Client = require('../../index.ts');
 
 class Logger {
     constructor(logFilePath, type) {

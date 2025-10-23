@@ -23,7 +23,7 @@ const Fs = require('fs');
 const Path = require('path');
 const RustPlusLib = require('@liamcottle/rustplus.js');
 
-const Client = require('../../index');
+const Client = require('../../index.ts');
 const Constants = require('../util/constants.js');
 const Decay = require('../util/decay.js');
 const DiscordEmbeds = require('../discordTools/discordEmbeds');
