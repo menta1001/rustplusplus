@@ -21,6 +21,8 @@
 const DiscordMessages = require('../discordTools/discordMessages.js');
 const Map = require('../util/map.js');
 
+const MARKET_LISTINGS_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
+
 module.exports = {
     handler: async function (rustplus, client, mapMarkers) {
         /* Handle Vending Machine changes */
@@ -116,8 +118,16 @@ module.exports = {
             }
         }
 
-        await DiscordMessages.sendMarketListingsMessage(rustplus.guildId, rustplus.serverId);
+        const now = Date.now();
+        const shouldUpdateMarketListings =
+            rustplus.lastMarketListingsUpdate === 0 ||
+            (now - rustplus.lastMarketListingsUpdate) >= MARKET_LISTINGS_UPDATE_INTERVAL_MS;
+
+        if (shouldUpdateMarketListings) {
+            await DiscordMessages.sendMarketListingsMessage(rustplus.guildId, rustplus.serverId);
+            rustplus.lastMarketListingsUpdate = now;
+        }
 
         rustplus.firstPollItems = { all: [], buy: [], sell: [] };
     },
-}
+};
