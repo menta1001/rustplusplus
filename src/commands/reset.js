@@ -93,10 +93,11 @@ module.exports = {
 					/* Ignore */
 				}
 
-				await DiscordTools.clearTextChannel(guild.id, instance.channelId.information, 100);
-				await DiscordTools.clearTextChannel(guild.id, instance.channelId.switches, 100);
-				await DiscordTools.clearTextChannel(guild.id, instance.channelId.switchGroups, 100);
-				await DiscordTools.clearTextChannel(guild.id, instance.channelId.storageMonitors, 100);
+                                await DiscordTools.clearTextChannel(guild.id, instance.channelId.information, 100);
+                                await DiscordTools.clearTextChannel(guild.id, instance.channelId.switches, 100);
+                                await DiscordTools.clearTextChannel(guild.id, instance.channelId.switchGroups, 100);
+                                await DiscordTools.clearTextChannel(guild.id, instance.channelId.storageMonitors, 100);
+                                await DiscordTools.clearTextChannel(guild.id, instance.channelId.logs, 100);
 
 				const rustplus = client.rustplusInstances[guild.id];
 				if (rustplus && rustplus.isOperational) {

@@ -212,6 +212,82 @@ class DiscordBot extends Discord.Client {
         this.logger.log(title, text, level);
     }
 
+    handleLogDispatch(type, payload) {
+        if (!payload || !['error', 'warn'].includes(payload.level)) {
+            return;
+        }
+
+        if (type === 'guild') {
+            if (!payload.guildId) return;
+
+            const guildPayload = {
+                ...payload,
+                source: payload.source ?? 'Rust+'
+            };
+
+            void this.dispatchLogToGuild(payload.guildId, guildPayload);
+        }
+        else if (type === 'default') {
+            for (const guild of this.guilds.cache.values()) {
+                const guildPayload = {
+                    ...payload,
+                    guildId: guild.id,
+                    source: payload.source ?? 'Bot'
+                };
+
+                void this.dispatchLogToGuild(guild.id, guildPayload);
+            }
+        }
+    }
+
+    async dispatchLogToGuild(guildId, payload) {
+        const instance = this.getInstance(guildId);
+
+        if (!instance || !instance.channelId || !instance.channelId.logs) {
+            return;
+        }
+
+        const channel = DiscordTools.getTextChannelById(guildId, instance.channelId.logs);
+
+        if (!channel) {
+            return;
+        }
+
+        const embed = new Discord.EmbedBuilder();
+        const timestamp = payload.timestamp instanceof Date ? payload.timestamp : new Date();
+        const resolvedLevel = payload.level === 'error' ? 'error' : 'warn';
+
+        const title = (typeof payload.title === 'string' && payload.title.length > 0)
+            ? payload.title
+            : this.intlGet(guildId, resolvedLevel === 'error' ? 'errorCap' : 'warningCap');
+
+        embed.setTitle(title);
+        embed.setDescription(typeof payload.text === 'string' ? payload.text : `${payload.text}`);
+        embed.setTimestamp(timestamp);
+        embed.setColor(resolvedLevel === 'error' ? 0xE74C3C : 0xF39C12);
+
+        const footerParts = [];
+
+        if (payload.source) {
+            footerParts.push(payload.source);
+        }
+
+        if (payload.serverName) {
+            footerParts.push(`${this.intlGet(guildId, 'server')}: ${payload.serverName}`);
+        }
+
+        footerParts.push(resolvedLevel.toUpperCase());
+
+        embed.setFooter({ text: footerParts.join(' | ') });
+
+        try {
+            await channel.send({ embeds: [embed] });
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }
+
     logInteraction(interaction, verifyId, type) {
         const channel = DiscordTools.getTextChannelById(interaction.guildId, interaction.channelId);
         const args = new Object();

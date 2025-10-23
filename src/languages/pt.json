@@ -86,6 +86,7 @@
     "channelNameActivity": "atividade",
     "channelNameAlarms": "alarmes",
     "channelNameCommands": "comandos",
+    "channelNameLogs": "registos",
     "channelNameEvents": "eventos",
     "channelNameInformation": "informação",
     "channelNameServers": "servidores",

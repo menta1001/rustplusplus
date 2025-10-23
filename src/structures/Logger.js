@@ -22,6 +22,7 @@ const Colors = require("colors");
 const Winston = require("winston");
 
 const Config = require('../../config');
+const Client = require('../../index.ts');
 
 class Logger {
     constructor(logFilePath, type) {
@@ -56,49 +57,125 @@ class Logger {
         return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
     }
 
+    resolveLevel(level, title) {
+        if (typeof level === 'string') {
+            const normalizedLevel = level.toLowerCase();
+
+            if (normalizedLevel === 'error') {
+                return 'error';
+            }
+
+            if (normalizedLevel === 'warn' || normalizedLevel === 'warning') {
+                return 'warn';
+            }
+        }
+
+        if (typeof title !== 'string') {
+            return 'info';
+        }
+
+        const client = Client.client;
+        if (!client) {
+            return 'info';
+        }
+
+        const normalizedTitle = title.trim().toLowerCase();
+
+        const guildId = (this.type === 'guild') ? this.guildId : null;
+
+        try {
+            const warningTitle = client.intlGet(guildId, 'warningCap');
+            const errorTitle = client.intlGet(guildId, 'errorCap');
+
+            if (warningTitle && normalizedTitle === warningTitle.toLowerCase()) {
+                return 'warn';
+            }
+
+            if (errorTitle && normalizedTitle === errorTitle.toLowerCase()) {
+                return 'error';
+            }
+        }
+        catch (e) {
+            /* Fallback to info */
+        }
+
+        return 'info';
+    }
+
+    dispatchToDiscord(level, title, text) {
+        if (!['error', 'warn'].includes(level)) {
+            return;
+        }
+
+        const client = Client.client;
+
+        if (!client || typeof client.handleLogDispatch !== 'function') {
+            return;
+        }
+
+        const payload = {
+            level,
+            title,
+            text,
+            timestamp: new Date(),
+        };
+
+        if (this.type === 'guild') {
+            payload.guildId = this.guildId;
+            payload.serverName = this.serverName;
+            payload.source = 'Rust+';
+        }
+        else {
+            payload.source = 'Bot';
+        }
+
+        client.handleLogDispatch(this.type, payload);
+    }
+
     log(title, text, level) {
-        let time = this.getTime();
+        const resolvedLevel = this.resolveLevel(level, title);
+        const time = this.getTime();
 
         switch (this.type) {
             case 'default': {
-                text = `${title}: ${text}`;
+                const messageText = `${title}: ${text}`;
                 this.logger.log({
-                    level: level,
-                    message: `${time} | ${text}`
+                    level: resolvedLevel,
+                    message: `${time} | ${messageText}`
                 });
 
                 console.log(
                     Colors.green(`${time} `) +
-                    ((level === 'error') ? Colors.red(text) : Colors.yellow(text))
+                    ((resolvedLevel === 'error') ? Colors.red(messageText) : Colors.yellow(messageText))
                 );
 
-                if (level === 'error' && Config.general.showCallStackError) {
+                if (resolvedLevel === 'error' && Config.general.showCallStackError) {
                     for (let line of (new Error().stack.split(/\r?\n/))) {
-                        this.logger.log({ level: level, message: `${time} | ${line}` });
+                        this.logger.log({ level: resolvedLevel, message: `${time} | ${line}` });
                         console.log(Colors.green(`${time} `) + Colors.red(line));
                     }
                 }
             } break;
 
             case 'guild': {
-                text = `${title}: ${text}`;
+                const messageText = `${title}: ${text}`;
 
                 this.logger.log({
-                    level: level,
-                    message: `${time} | ${this.guildId} | ${this.serverName} | ${text}`
+                    level: resolvedLevel,
+                    message: `${time} | ${this.guildId} | ${this.serverName} | ${messageText}`
                 });
 
                 console.log(
                     Colors.green(`${time} `) +
                     Colors.cyan(`${this.guildId} `) +
                     Colors.white(`${this.serverName} `) +
-                    ((level === 'error') ? Colors.red(text) : Colors.yellow(text))
+                    ((resolvedLevel === 'error') ? Colors.red(messageText) : Colors.yellow(messageText))
                 );
 
-                if (level === 'error' && Config.general.showCallStackError) {
+                if (resolvedLevel === 'error' && Config.general.showCallStackError) {
                     for (let line of (new Error().stack.split(/\r?\n/))) {
                         this.logger.log({
-                            level: level,
+                            level: resolvedLevel,
                             message: `${time} | ${this.guildId} | ${this.serverName} | ${line}`
                         });
                         console.log(
@@ -113,6 +190,8 @@ class Logger {
             default: {
             } break;
         }
+
+        this.dispatchToDiscord(resolvedLevel, title, text);
     }
 }
 
