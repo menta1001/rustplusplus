@@ -50,6 +50,10 @@ module.exports = async (client, guild) => {
 
     /* Destroy previous instance of fcm listener */
     if (client.fcmListeners[guild.id]) client.fcmListeners[guild.id].destroy();
+    if (!client.fcmListenersLite[guild.id]) {
+        client.fcmListenersLite[guild.id] = new Object();
+    }
+
     if (client.fcmListenersLite[guild.id][hoster]) {
         client.fcmListenersLite[guild.id][hoster].destroy();
         delete client.fcmListenersLite[guild.id][hoster];

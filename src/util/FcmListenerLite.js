@@ -47,6 +47,10 @@ module.exports = async (client, guild, steamId) => {
         return;
     }
 
+    if (!client.fcmListenersLite[guild.id]) {
+        client.fcmListenersLite[guild.id] = new Object();
+    }
+
     if (client.fcmListenersLite[guild.id][steamId]) {
         client.fcmListenersLite[guild.id][steamId].destroy();
         delete client.fcmListenersLite[guild.id][steamId];
