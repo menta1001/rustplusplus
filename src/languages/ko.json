@@ -288,6 +288,7 @@
     "connectingToServer": "서버에 연결중...",
     "connectionEvents": "Connection Events",
     "connectionRefusedTo": "연결이 거부되었습니다: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "연결",
     "couldNotAddStepTracers": "Could not add step tracers.",
     "couldNotAppendMapMarkers": "지도에 표시를 추가할 수 없습니다.rustplus 정보 인스턴스가 설정되지 않았습니다.",

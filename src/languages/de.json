@@ -302,6 +302,7 @@
     "connectingToServer": "VERBINDE MIT SERVER ...",
     "connectionEvents": "Verbindungsereignisse",
     "connectionRefusedTo": "Verbindung verweigert zu: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "VERBINDUNGEN",
     "couldNotAddStepTracers": "Konnte Tracer-Schrite nicht hinzufügen.",
     "couldNotAppendMapMarkers": "Konnte Karten-Markierungen nicht hinzufügen, da rustplus-Info-Instanz nicht festgelegt ist.",

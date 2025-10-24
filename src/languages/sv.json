@@ -288,6 +288,7 @@
     "connectingToServer": "ANSLUTER TILL SERVERN...",
     "connectionEvents": "Connection Events",
     "connectionRefusedTo": "Anslutning vägrades till: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "ANSLUTNINGAR",
     "couldNotAddStepTracers": "Could not add step tracers.",
     "couldNotAppendMapMarkers": "Det gick inte att lägga till kartmarkörer, rustplus infoinstansen är inte inställd.",

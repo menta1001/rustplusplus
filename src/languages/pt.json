@@ -288,6 +288,7 @@
     "connectingToServer": "A CONECTAR AO SERVIDOR...",
     "connectionEvents": "Eventos de conexão",
     "connectionRefusedTo": "Conexão recusada a: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "CONEXÕES",
     "couldNotAddStepTracers": "Não foi possível adicionar rastro de passos.",
     "couldNotAppendMapMarkers": "Não foi possível adicionar marcadores de mapa, o pedido do rustplus não está definido.",

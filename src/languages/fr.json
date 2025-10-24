@@ -302,6 +302,7 @@
     "connectingToServer": "RECONNEXION AU SERVEUR...",
     "connectionEvents": "Événements de connexion",
     "connectionRefusedTo": "Connexion refusée : {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "CONNEXION",
     "couldNotAddStepTracers": "Impossible d'ajouter des traceurs d'étapes.",
     "couldNotAppendMapMarkers": "Impossible d'ajouter des marqueurs de carte, l'instance d'informations rust+ n'est pas définie.",

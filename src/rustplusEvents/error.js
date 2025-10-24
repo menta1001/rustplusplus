@@ -33,18 +33,23 @@ module.exports = {
                 await errorTimedOut(rustplus, client, err);
             } break;
 
-            case 'ENOTFOUND': {
-                errorNotFound(rustplus, client, err);
-            } break;
+        case 'ENOTFOUND': {
+            errorNotFound(rustplus, client, err);
+        } break;
 
-            case 'ECONNREFUSED': {
-                await errorConnRefused(rustplus, client, err);
-            } break;
+        case 'ECONNREFUSED': {
+            await errorConnRefused(rustplus, client, err);
+        } break;
 
-            default: {
-                errorOther(rustplus, client, err);
-            } break;
-        }
+        case 'ECONNRESET':
+        case 'EPIPE': {
+            await errorConnReset(rustplus, client, err);
+        } break;
+
+        default: {
+            errorOther(rustplus, client, err);
+        } break;
+    }
     },
 };
 
@@ -67,6 +72,13 @@ function errorNotFound(rustplus, client, err) {
 
 async function errorConnRefused(rustplus, client, err) {
     rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'connectionRefusedTo', {
+        id: rustplus.serverId
+    }), 'error');
+    await scheduleReconnect(rustplus, client);
+}
+
+async function errorConnReset(rustplus, client, err) {
+    rustplus.log(client.intlGet(null, 'errorCap'), client.intlGet(null, 'connectionResetTo', {
         id: rustplus.serverId
     }), 'error');
     await scheduleReconnect(rustplus, client);

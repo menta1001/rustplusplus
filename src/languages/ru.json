@@ -288,6 +288,7 @@
     "connectingToServer": "ПОДКЛЮЧЕНИЕ К СЕРВЕРУ...",
     "connectionEvents": "События подключения",
     "connectionRefusedTo": "Отказано в соединение к: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "СОЕДИНЕНИЯ",
     "couldNotAddStepTracers": "Не удалось добавить отслеживатели шагов.",
     "couldNotAppendMapMarkers": "Не удалось добавить маркеры карты, экземпляр Rustplus Info не установлен.",

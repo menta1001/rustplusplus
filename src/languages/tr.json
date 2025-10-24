@@ -288,6 +288,7 @@
     "connectingToServer": "SUNUCUYA BAĞLANIYOR...",
     "connectionEvents": "Bağlantı Onayları",
     "connectionRefusedTo": "Bağlantı reddedildi: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "BAĞLANTILAR",
     "couldNotAddStepTracers": "Could not add step tracers.",
     "couldNotAppendMapMarkers": "Harita işaretleri ayarlanamadı, rustplus bilgisi ayarlı değil.",

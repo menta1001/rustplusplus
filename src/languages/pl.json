@@ -288,6 +288,7 @@
     "connectingToServer": "CONNECTING TO SERVER...",
     "connectionEvents": "Connection Events",
     "connectionRefusedTo": "Connection refused to: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "CONNECTIONS",
     "couldNotAddStepTracers": "Could not add step tracers.",
     "couldNotAppendMapMarkers": "Could not append map markers, rustplus info instance is not set.",

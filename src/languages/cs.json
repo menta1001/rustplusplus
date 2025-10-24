@@ -302,6 +302,7 @@
     "connectingToServer": "PŘIPOJOVÁNÍ NA SERVER...",
     "connectionEvents": "Události připojení",
     "connectionRefusedTo": "Připojení odmítnuto k: {id}.",
+    "connectionResetTo": "Connection reset to: {id}.",
     "connectionsCap": "PŘIPOJENÍ",
     "couldNotAddStepTracers": "Nelze přidat stopovací body.",
     "couldNotAppendMapMarkers": "Nelze připojit značky mapy, instance rustplus info není nastavena.",
